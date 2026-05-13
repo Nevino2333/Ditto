@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext"],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["bun"],
+    "paths": {
+      "@ditto/shared": ["../packages/shared/src"],
+      "@ditto/packager": ["../packages/packager/src"]
+    }
+  },
+  "include": ["src"]
+}

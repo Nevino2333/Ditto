@@ -1,0 +1,20 @@
+{
+  "id": "com.ditto.calc",
+  "name": "Ditto Calculator",
+  "version": "1.0.0",
+  "description": "简洁美观的科学计算器",
+  "icon": "🧮",
+  "entry": "frontend/index.html",
+  "category": "utility",
+  "sandbox": "trusted",
+  "permissions": [],
+  "type": "app",
+  "window": {
+    "width": 360,
+    "height": 520,
+    "minWidth": 280,
+    "minHeight": 400,
+    "resizable": true,
+    "maximizable": true
+  }
+}

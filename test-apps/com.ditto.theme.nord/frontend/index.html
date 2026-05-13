@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nord Theme</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #2e3440; color: #eceff4; padding: 24px; }
+
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    h1 span { color: #88c0d0; }
+    .subtitle { color: #d8dee9; margin-bottom: 24px; font-size: 14px; }
+
+    .preview-box { background: #3b4252; border: 1px solid #4c566a; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .preview-box h3 { font-size: 14px; color: #88c0d0; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+    .color-swatch { border-radius: 8px; padding: 12px 8px; text-align: center; font-size: 11px; }
+    .color-swatch .name { font-weight: 600; margin-bottom: 4px; }
+    .color-swatch .value { opacity: 0.7; }
+
+    .typo-sample { margin-bottom: 8px; }
+    .typo-sample.h1 { font-size: 22px; font-weight: 700; }
+    .typo-sample.h2 { font-size: 18px; font-weight: 600; }
+    .typo-sample.body { font-size: 14px; font-weight: 400; }
+    .typo-sample.caption { font-size: 12px; color: #d8dee9; }
+    .typo-sample.mono { font-family: 'Consolas', 'Fira Code', monospace; font-size: 13px; background: rgba(136,192,208,0.15); padding: 4px 8px; border-radius: 4px; display: inline-block; }
+
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .demo-btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: transform 0.1s; }
+    .demo-btn:active { transform: scale(0.95); }
+
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .demo-card { background: rgba(136,192,208,0.1); border: 1px solid #4c566a; border-radius: 8px; padding: 16px; }
+    .demo-card h4 { font-size: 14px; margin-bottom: 6px; color: #88c0d0; }
+    .demo-card p { font-size: 12px; color: #d8dee9; line-height: 1.5; }
+
+    .apply-btn { background: #88c0d0; color: #2e3440; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: background 0.15s; }
+    .apply-btn:hover { background: #8fbcbb; }
+
+    .status { margin-top: 12px; font-size: 13px; color: #a3be8c; opacity: 0; transition: opacity 0.3s; }
+    .status.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>❄️ <span>Nord</span> Theme</h1>
+  <p class="subtitle">北欧极光主题 — 冷峻优雅，极简之美</p>
+
+  <div class="preview-box">
+    <h3>调色板</h3>
+    <div class="color-grid">
+      <div class="color-swatch" style="background:#88c0d0;color:#2e3440"><div class="name">Primary</div><div class="value">#88c0d0</div></div>
+      <div class="color-swatch" style="background:#81a1c1;color:#eceff4"><div class="name">Accent</div><div class="value">#81a1c1</div></div>
+      <div class="color-swatch" style="background:#2e3440;color:#eceff4;border:1px solid #4c566a"><div class="name">Background</div><div class="value">#2e3440</div></div>
+      <div class="color-swatch" style="background:#3b4252;color:#eceff4;border:1px solid #4c566a"><div class="name">Surface</div><div class="value">#3b4252</div></div>
+      <div class="color-swatch" style="background:#a3be8c;color:#2e3440"><div class="name">Success</div><div class="value">#a3be8c</div></div>
+      <div class="color-swatch" style="background:#ebcb8b;color:#2e3440"><div class="name">Warning</div><div class="value">#ebcb8b</div></div>
+      <div class="color-swatch" style="background:#bf616a;color:white"><div class="name">Error</div><div class="value">#bf616a</div></div>
+      <div class="color-swatch" style="background:#5e81ac;color:white"><div class="name">Info</div><div class="value">#5e81ac</div></div>
+    </div>
+  </div>
+
+  <div class="preview-box">
+    <h3>排版</h3>
+    <div class="typo-sample h1">极光标题 Heading 1</div>
+    <div class="typo-sample h2">冰原副标题 Heading 2</div>
+    <div class="typo-sample body">这是一段正文内容，展示北欧主题下的阅读体验。极光闪烁，冰雪皑皑。</div>
+    <div class="typo-sample caption">辅助说明文字 Caption</div>
+    <div class="typo-sample mono">const nord = "aurora";</div>
+  </div>
+
+  <div class="preview-box">
+    <h3>按钮样式</h3>
+    <div class="btn-row">
+      <button class="demo-btn" style="background:#88c0d0;color:#2e3440">Primary</button>
+      <button class="demo-btn" style="background:#81a1c1;color:#eceff4">Accent</button>
+      <button class="demo-btn" style="background:#a3be8c;color:#2e3440">Success</button>
+      <button class="demo-btn" style="background:rgba(136,192,208,0.1);color:#eceff4;border:1px solid #4c566a">Ghost</button>
+    </div>
+  </div>
+
+  <div class="preview-box">
+    <h3>卡片示例</h3>
+    <div class="card-grid">
+      <div class="demo-card">
+        <h4>❄️ 极光</h4>
+        <p>北极夜空中的光之舞蹈，色彩斑斓而神秘</p>
+      </div>
+      <div class="demo-card">
+        <h4>🏔️ 冰川</h4>
+        <p>千年冰川静静矗立，诉说着岁月的故事</p>
+      </div>
+    </div>
+  </div>
+
+  <button class="apply-btn" onclick="applyTheme()">应用主题</button>
+  <div class="status" id="status">✅ 主题已应用</div>
+
+  <script>
+    function applyTheme() {
+      const el = document.getElementById('status');
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>

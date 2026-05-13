@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forest Theme</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1b4332; color: #d8f3dc; padding: 24px; }
+
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    h1 span { color: #52b788; }
+    .subtitle { color: #b7e4c7; margin-bottom: 24px; font-size: 14px; }
+
+    .preview-box { background: #081c15; border: 1px solid #2d6a4f; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .preview-box h3 { font-size: 14px; color: #52b788; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+    .color-swatch { border-radius: 8px; padding: 12px 8px; text-align: center; font-size: 11px; }
+    .color-swatch .name { font-weight: 600; margin-bottom: 4px; }
+    .color-swatch .value { opacity: 0.7; }
+
+    .typo-sample { margin-bottom: 8px; }
+    .typo-sample.h1 { font-size: 22px; font-weight: 700; }
+    .typo-sample.h2 { font-size: 18px; font-weight: 600; }
+    .typo-sample.body { font-size: 14px; font-weight: 400; }
+    .typo-sample.caption { font-size: 12px; color: #b7e4c7; }
+    .typo-sample.mono { font-family: 'Consolas', 'Fira Code', monospace; font-size: 13px; background: rgba(45,106,79,0.3); padding: 4px 8px; border-radius: 4px; display: inline-block; }
+
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .demo-btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: transform 0.1s; }
+    .demo-btn:active { transform: scale(0.95); }
+
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .demo-card { background: rgba(45,106,79,0.2); border: 1px solid #1b4332; border-radius: 8px; padding: 16px; }
+    .demo-card h4 { font-size: 14px; margin-bottom: 6px; color: #52b788; }
+    .demo-card p { font-size: 12px; color: #b7e4c7; line-height: 1.5; }
+
+    .apply-btn { background: #2d6a4f; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: background 0.15s; }
+    .apply-btn:hover { background: #40916c; }
+
+    .status { margin-top: 12px; font-size: 13px; color: #06d6a0; opacity: 0; transition: opacity 0.3s; }
+    .status.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>🌲 <span>Forest</span> Theme</h1>
+  <p class="subtitle">自然森林绿色主题 — 清新舒适，回归自然</p>
+
+  <div class="preview-box">
+    <h3>调色板</h3>
+    <div class="color-grid">
+      <div class="color-swatch" style="background:#2d6a4f;color:white"><div class="name">Primary</div><div class="value">#2d6a4f</div></div>
+      <div class="color-swatch" style="background:#52b788;color:#081c15"><div class="name">Accent</div><div class="value">#52b788</div></div>
+      <div class="color-swatch" style="background:#1b4332;color:#d8f3dc;border:1px solid #2d6a4f"><div class="name">Background</div><div class="value">#1b4332</div></div>
+      <div class="color-swatch" style="background:#081c15;color:#d8f3dc;border:1px solid #2d6a4f"><div class="name">Surface</div><div class="value">#081c15</div></div>
+      <div class="color-swatch" style="background:#06d6a0;color:#081c15"><div class="name">Success</div><div class="value">#06d6a0</div></div>
+      <div class="color-swatch" style="background:#ffd166;color:#081c15"><div class="name">Warning</div><div class="value">#ffd166</div></div>
+      <div class="color-swatch" style="background:#ef476f;color:white"><div class="name">Error</div><div class="value">#ef476f</div></div>
+      <div class="color-swatch" style="background:#74c69d;color:#081c15"><div class="name">Info</div><div class="value">#74c69d</div></div>
+    </div>
+  </div>
+
+  <div class="preview-box">
+    <h3>排版</h3>
+    <div class="typo-sample h1">森林标题 Heading 1</div>
+    <div class="typo-sample h2">林间副标题 Heading 2</div>
+    <div class="typo-sample body">这是一段正文内容，展示森林主题下的阅读体验。微风拂过，树叶沙沙作响。</div>
+    <div class="typo-sample caption">辅助说明文字 Caption</div>
+    <div class="typo-sample mono">const forest = "ever-green";</div>
+  </div>
+
+  <div class="preview-box">
+    <h3>按钮样式</h3>
+    <div class="btn-row">
+      <button class="demo-btn" style="background:#2d6a4f;color:white">Primary</button>
+      <button class="demo-btn" style="background:#52b788;color:#081c15">Accent</button>
+      <button class="demo-btn" style="background:#06d6a0;color:#081c15">Success</button>
+      <button class="demo-btn" style="background:rgba(45,106,79,0.2);color:#d8f3dc;border:1px solid #2d6a4f">Ghost</button>
+    </div>
+  </div>
+
+  <div class="preview-box">
+    <h3>卡片示例</h3>
+    <div class="card-grid">
+      <div class="demo-card">
+        <h4>🌲 年轮</h4>
+        <p>每一圈年轮都记录着一年的风雨与阳光</p>
+      </div>
+      <div class="demo-card">
+        <h4>🌿 苔藓</h4>
+        <p>幽暗的林间，苔藓铺就了柔软的地毯</p>
+      </div>
+    </div>
+  </div>
+
+  <button class="apply-btn" onclick="applyTheme()">应用主题</button>
+  <div class="status" id="status">✅ 主题已应用</div>
+
+  <script>
+    function applyTheme() {
+      const el = document.getElementById('status');
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>

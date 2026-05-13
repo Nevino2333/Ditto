@@ -1,0 +1,20 @@
+{
+  "id": "com.ditto.theme.midnight",
+  "name": "Midnight Theme",
+  "version": "1.0.0",
+  "description": "优雅的午夜深色主题",
+  "icon": "🌙",
+  "entry": "frontend/index.html",
+  "category": "theme",
+  "sandbox": "trusted",
+  "permissions": [],
+  "type": "theme",
+  "window": {
+    "width": 480,
+    "height": 400,
+    "minWidth": 360,
+    "minHeight": 300,
+    "resizable": true,
+    "maximizable": true
+  }
+}

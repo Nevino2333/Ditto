@@ -1,0 +1,12 @@
+export { useWindowStore } from './window-manager';
+export { calculateTilingLayout, getSnapZones, detectSnapZone } from './window-manager';
+export type { SnapZone } from './window-manager';
+export { useAppStore } from './app-manager';
+export { VFS, getVFS, IndexedDBProvider, OPFSProvider, isOPFSSupported } from './vfs';
+export { NetProxy, getNetProxy, ProxyCache, defaultProxyConfig } from './net-proxy';
+export type { ProxyConfig, ProxyRequestOptions, ProxyResponse, ProxyCacheEntry } from './net-proxy';
+export { useWidgetStore } from './widget';
+export { useIslandStore } from './island';
+export { useNotificationStore } from './notification-center';
+export type { NotificationEntry } from './notification-center';
+export { useDialogStore } from './dialog';

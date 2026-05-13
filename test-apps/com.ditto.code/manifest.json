@@ -1,0 +1,20 @@
+{
+  "id": "com.ditto.code",
+  "name": "Ditto Code",
+  "version": "1.0.0",
+  "description": "轻量级代码编辑器，支持语法高亮",
+  "icon": "💻",
+  "entry": "frontend/index.html",
+  "category": "development",
+  "sandbox": "trusted",
+  "permissions": ["storage"],
+  "type": "app",
+  "window": {
+    "width": 800,
+    "height": 600,
+    "minWidth": 600,
+    "minHeight": 400,
+    "resizable": true,
+    "maximizable": true
+  }
+}

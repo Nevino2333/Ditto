@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ditto Calculator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; height: 100vh; display: flex; flex-direction: column; padding: 16px; }
+
+    .display { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 16px; text-align: right; min-height: 100px; display: flex; flex-direction: column; justify-content: flex-end; }
+    .display .expression { font-size: 16px; color: #8b949e; margin-bottom: 8px; min-height: 20px; word-break: break-all; }
+    .display .result { font-size: 36px; font-weight: 700; color: #58a6ff; word-break: break-all; }
+
+    .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1; }
+    .btn { border: none; border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer; transition: all 0.1s; padding: 12px; }
+    .btn:active { transform: scale(0.95); }
+    .btn-num { background: #21262d; color: #c9d1d9; }
+    .btn-num:hover { background: #30363d; }
+    .btn-op { background: #1f3a5f; color: #58a6ff; }
+    .btn-op:hover { background: #264d7a; }
+    .btn-fn { background: #2d1b3d; color: #bc8cff; }
+    .btn-fn:hover { background: #3d2a50; }
+    .btn-eq { background: #1f6feb; color: white; }
+    .btn-eq:hover { background: #388bfd; }
+    .btn-clear { background: #3d1f1f; color: #f85149; }
+    .btn-clear:hover { background: #5a2d2d; }
+    .btn-span2 { grid-column: span 2; }
+
+    .history { margin-top: 12px; max-height: 80px; overflow-y: auto; font-size: 12px; color: #484f58; }
+    .history-item { padding: 2px 0; }
+  </style>
+</head>
+<body>
+  <div class="display">
+    <div class="expression" id="expression"></div>
+    <div class="result" id="result">0</div>
+  </div>
+  <div class="buttons">
+    <button class="btn btn-clear" onclick="clearAll()">C</button>
+    <button class="btn btn-fn" onclick="appendChar('(')">(</button>
+    <button class="btn btn-fn" onclick="appendChar(')')">)</button>
+    <button class="btn btn-op" onclick="appendOp('/')">÷</button>
+
+    <button class="btn btn-num" onclick="appendChar('7')">7</button>
+    <button class="btn btn-num" onclick="appendChar('8')">8</button>
+    <button class="btn btn-num" onclick="appendChar('9')">9</button>
+    <button class="btn btn-op" onclick="appendOp('*')">×</button>
+
+    <button class="btn btn-num" onclick="appendChar('4')">4</button>
+    <button class="btn btn-num" onclick="appendChar('5')">5</button>
+    <button class="btn btn-num" onclick="appendChar('6')">6</button>
+    <button class="btn btn-op" onclick="appendOp('-')">−</button>
+
+    <button class="btn btn-num" onclick="appendChar('1')">1</button>
+    <button class="btn btn-num" onclick="appendChar('2')">2</button>
+    <button class="btn btn-num" onclick="appendChar('3')">3</button>
+    <button class="btn btn-op" onclick="appendOp('+')">+</button>
+
+    <button class="btn btn-num" onclick="appendChar('0')">0</button>
+    <button class="btn btn-num" onclick="appendChar('.')">.</button>
+    <button class="btn btn-fn" onclick="backspace()">⌫</button>
+    <button class="btn btn-eq" onclick="calculate()">=</button>
+  </div>
+  <div class="history" id="history"></div>
+
+  <script>
+    let expr = '';
+    let history = [];
+
+    function appendChar(c) { expr += c; updateDisplay(); }
+    function appendOp(op) {
+      if (expr && !'+-*/('.includes(expr[expr.length - 1])) expr += op;
+      updateDisplay();
+    }
+    function backspace() { expr = expr.slice(0, -1); updateDisplay(); }
+    function clearAll() { expr = ''; document.getElementById('result').textContent = '0'; updateDisplay(); }
+
+    function calculate() {
+      try {
+        const sanitized = expr.replace(/[^0-9+\-*/.()]/g, '');
+        if (!sanitized) return;
+        const result = Function('"use strict"; return (' + sanitized + ')')();
+        const display = Number.isFinite(result) ? parseFloat(result.toPrecision(12)).toString() : 'Error';
+        history.unshift(`${expr} = ${display}`);
+        if (history.length > 10) history.pop();
+        document.getElementById('result').textContent = display;
+        expr = display;
+        updateDisplay();
+        renderHistory();
+      } catch {
+        document.getElementById('result').textContent = 'Error';
+      }
+    }
+
+    function updateDisplay() {
+      const display = expr.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−');
+      document.getElementById('expression').textContent = display;
+    }
+
+    function renderHistory() {
+      document.getElementById('history').innerHTML = history.map(h =>
+        `<div class="history-item">${h.replace(/\*/g,'×').replace(/\//g,'÷')}</div>`
+      ).join('');
+    }
+
+    document.addEventListener('keydown', e => {
+      if ('0123456789.'.includes(e.key)) appendChar(e.key);
+      else if ('+-*/'.includes(e.key)) appendOp(e.key);
+      else if (e.key === 'Enter') calculate();
+      else if (e.key === 'Backspace') backspace();
+      else if (e.key === 'Escape') clearAll();
+    });
+  </script>
+</body>
+</html>

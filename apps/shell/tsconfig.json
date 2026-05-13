@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "../..",
+    "paths": {
+      "@ditto/shared": ["../../packages/shared/src"],
+      "@ditto/core": ["../../packages/core/src"],
+      "@ditto/services": ["../../packages/services/src"],
+      "@ditto/theme": ["../../packages/theme/src"],
+      "@ditto/ui": ["../../packages/ui/src"],
+      "@ditto/sdk": ["../../packages/sdk/src"],
+      "@ditto/adapter": ["../../packages/adapter/src"]
+    }
+  },
+  "include": ["src", "../../packages/*/src"]
+}

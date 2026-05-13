@@ -1,0 +1,1 @@
+export { IPCBus } from './bus';

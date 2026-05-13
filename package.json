@@ -1,0 +1,24 @@
+{
+  "name": "ditto-webos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ditto - A universal WebOS framework",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "clean": "turbo clean"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
+    "vue-tsc": "^3.2.8"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

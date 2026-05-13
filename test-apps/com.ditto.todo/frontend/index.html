@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ditto Todo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d1117;--bg-secondary:#161b22;--bg-tertiary:#21262d;
+  --border:#30363d;--text:#e6edf3;--text-secondary:#8b949e;
+  --accent:#58a6ff;--success:#3fb950;--danger:#f85149;
+  --warning:#d29922;--high:#f85149;--medium:#d29922;--low:#3fb950;
+  --radius:8px;--shadow:0 2px 8px rgba(0,0,0,.3);
+  --transition:all .25s cubic-bezier(.4,0,.2,1);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-secondary)}
+
+.app{display:flex;height:100vh;width:100%}
+
+.sidebar{width:200px;min-width:200px;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:var(--transition)}
+.sidebar-header{padding:20px 16px 12px;display:flex;align-items:center;gap:10px}
+.sidebar-header .logo{font-size:24px}
+.sidebar-header h1{font-size:16px;font-weight:600;letter-spacing:-.3px}
+.sidebar-categories{flex:1;overflow-y:auto;padding:4px 8px}
+.cat-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius);cursor:pointer;transition:var(--transition);font-size:13px;color:var(--text-secondary);position:relative;user-select:none}
+.cat-item:hover{background:var(--bg-tertiary);color:var(--text)}
+.cat-item.active{background:rgba(88,166,255,.12);color:var(--accent)}
+.cat-item .cat-icon{font-size:16px;width:20px;text-align:center}
+.cat-item .cat-count{margin-left:auto;font-size:11px;background:var(--bg-tertiary);padding:1px 7px;border-radius:10px;min-width:20px;text-align:center}
+.cat-item.active .cat-count{background:rgba(88,166,255,.2);color:var(--accent)}
+.cat-item .cat-delete{position:absolute;right:4px;top:50%;transform:translateY(-50%);opacity:0;transition:opacity .15s;background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px}
+.cat-item:hover .cat-delete{opacity:.7}
+.cat-item .cat-delete:hover{opacity:1;background:rgba(248,81,73,.15)}
+.sidebar-add{padding:8px 12px;border-top:1px solid var(--border)}
+.add-cat-btn{width:100%;padding:7px;border:1px dashed var(--border);border-radius:var(--radius);background:none;color:var(--text-secondary);cursor:pointer;font-size:12px;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:4px}
+.add-cat-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.06)}
+.add-cat-input{display:flex;gap:4px}
+.add-cat-input input{flex:1;padding:6px 10px;border:1px solid var(--accent);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:12px;outline:none}
+.add-cat-input button{padding:6px 10px;border:none;border-radius:var(--radius);background:var(--accent);color:#fff;cursor:pointer;font-size:12px}
+.add-cat-input button:hover{opacity:.9}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.main-header{padding:16px 20px 0;display:flex;flex-direction:column;gap:12px}
+.header-top{display:flex;align-items:center;justify-content:space-between}
+.header-top h2{font-size:20px;font-weight:600}
+.progress-wrap{display:flex;align-items:center;gap:12px}
+.progress-bar{flex:1;height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--success));border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.progress-text{font-size:12px;color:var(--text-secondary);min-width:36px;text-align:right}
+
+.add-form{display:flex;gap:8px;padding:0 20px;margin-top:12px;align-items:stretch}
+.add-form input[type="text"]{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-secondary);color:var(--text);font-size:13px;outline:none;transition:var(--transition)}
+.add-form input[type="text"]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,166,255,.15)}
+.add-form input[type="text"]::placeholder{color:var(--text-secondary)}
+.add-form select{padding:10px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-secondary);color:var(--text);font-size:12px;outline:none;cursor:pointer;min-width:72px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b949e'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:22px}
+.add-form select:focus{border-color:var(--accent)}
+.add-form .add-btn{padding:10px 16px;border:none;border-radius:var(--radius);background:var(--accent);color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition);white-space:nowrap}
+.add-form .add-btn:hover{background:#79b8ff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(88,166,255,.3)}
+
+.filters{display:flex;align-items:center;gap:8px;padding:12px 20px 0;flex-wrap:wrap}
+.filter-group{display:flex;background:var(--bg-secondary);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.filter-btn{padding:6px 14px;border:none;background:none;color:var(--text-secondary);cursor:pointer;font-size:12px;transition:var(--transition);white-space:nowrap}
+.filter-btn:hover{color:var(--text);background:var(--bg-tertiary)}
+.filter-btn.active{background:var(--accent);color:#fff}
+.sort-select{padding:6px 24px 6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-secondary);color:var(--text-secondary);font-size:12px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b949e'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.sort-select:focus{border-color:var(--accent)}
+
+.todo-list{flex:1;overflow-y:auto;padding:12px 20px 20px}
+.todo-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;transition:var(--transition);cursor:grab;position:relative;animation:slideIn .3s cubic-bezier(.4,0,.2,1)}
+.todo-item:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(88,166,255,.08)}
+.todo-item.dragging{opacity:.5;transform:scale(.97)}
+.todo-item.drag-over{border-color:var(--success);box-shadow:0 0 0 2px rgba(63,185,80,.2)}
+.todo-item.completing{animation:completeAnim .5s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes completeAnim{0%{transform:scale(1)}30%{transform:scale(1.02)}100%{transform:scale(1)}}
+@keyframes removeAnim{to{opacity:0;transform:translateX(40px);height:0;padding:0;margin:0;border:0;overflow:hidden}}
+
+.todo-checkbox{width:20px;height:20px;border:2px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);flex-shrink:0}
+.todo-checkbox:hover{border-color:var(--accent)}
+.todo-checkbox.checked{background:var(--success);border-color:var(--success)}
+.todo-checkbox.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+
+.priority-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.priority-dot.high{background:var(--high);box-shadow:0 0 6px rgba(248,81,73,.4)}
+.priority-dot.medium{background:var(--medium);box-shadow:0 0 6px rgba(210,153,34,.4)}
+.priority-dot.low{background:var(--low);box-shadow:0 0 6px rgba(63,185,80,.4)}
+
+.todo-content{flex:1;min-width:0}
+.todo-text{font-size:13px;line-height:1.4;transition:var(--transition);word-break:break-word}
+.todo-text.done{text-decoration:line-through;color:var(--text-secondary);opacity:.6}
+.todo-meta{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:11px;color:var(--text-secondary)}
+.todo-meta .tag{padding:1px 8px;border-radius:10px;background:var(--bg-tertiary);font-size:10px}
+
+.todo-delete{opacity:0;border:none;background:none;color:var(--danger);cursor:pointer;font-size:16px;padding:4px 6px;border-radius:4px;transition:var(--transition);flex-shrink:0}
+.todo-item:hover .todo-delete{opacity:.6}
+.todo-delete:hover{opacity:1!important;background:rgba(248,81,73,.15)}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--text-secondary);text-align:center;animation:fadeIn .5s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.empty-icon{font-size:64px;margin-bottom:16px;opacity:.5}
+.empty-title{font-size:15px;font-weight:500;margin-bottom:6px;color:var(--text)}
+.empty-desc{font-size:13px;max-width:240px;line-height:1.5}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:var(--radius);font-size:13px;z-index:999;transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:480px){
+  .sidebar{position:fixed;left:-220px;z-index:10;height:100%;transition:left .3s}
+  .sidebar.open{left:0;box-shadow:4px 0 20px rgba(0,0,0,.5)}
+  .mobile-toggle{display:flex!important}
+}
+.mobile-toggle{display:none;position:fixed;top:12px;left:12px;z-index:11;width:36px;height:36px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-secondary);color:var(--text);align-items:center;justify-content:center;cursor:pointer;font-size:16px}
+</style>
+</head>
+<body>
+
+<div class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="logo">✅</span>
+      <h1>Ditto Todo</h1>
+    </div>
+    <div class="sidebar-categories" id="categoryList"></div>
+    <div class="sidebar-add" id="addCatArea">
+      <button class="add-cat-btn" id="addCatBtn" onclick="showAddCat()">＋ 添加分类</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="main-header">
+      <div class="header-top">
+        <h2 id="mainTitle">全部待办</h2>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+          <span class="progress-text" id="progressText">0%</span>
+        </div>
+      </div>
+      <div class="add-form">
+        <input type="text" id="todoInput" placeholder="添加新待办..." onkeydown="if(event.key==='Enter')addTodo()">
+        <select id="catSelect"></select>
+        <select id="prioritySelect">
+          <option value="medium">中</option>
+          <option value="high">高</option>
+          <option value="low">低</option>
+        </select>
+        <button class="add-btn" onclick="addTodo()">添加</button>
+      </div>
+      <div class="filters">
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">全部</button>
+          <button class="filter-btn" data-filter="active" onclick="setFilter('active',this)">进行中</button>
+          <button class="filter-btn" data-filter="completed" onclick="setFilter('completed',this)">已完成</button>
+        </div>
+        <select class="sort-select" id="sortSelect" onchange="setSort(this.value)">
+          <option value="date">按日期</option>
+          <option value="priority">按优先级</option>
+        </select>
+      </div>
+    </div>
+    <div class="todo-list" id="todoList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'ditto-todo-data';
+const defaultCategories = [
+  { id: 'all', name: '全部', icon: '📋', removable: false },
+  { id: 'work', name: '工作', icon: '💼', removable: false },
+  { id: 'personal', name: '个人', icon: '🏠', removable: false },
+  { id: 'shopping', name: '购物', icon: '🛒', removable: false },
+  { id: 'health', name: '健康', icon: '💪', removable: false }
+];
+
+let state = {
+  categories: [...defaultCategories],
+  todos: [],
+  activeCategory: 'all',
+  filter: 'all',
+  sort: 'date',
+  nextId: 1
+};
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (d) {
+      state = { ...state, ...d };
+      const ids = state.categories.map(c => c.id);
+      defaultCategories.forEach(dc => {
+        if (!ids.includes(dc.id)) state.categories.push(dc);
+      });
+    }
+  } catch(e) {}
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getFiltered() {
+  let list = state.todos;
+  if (state.activeCategory !== 'all') {
+    list = list.filter(t => t.category === state.activeCategory);
+  }
+  if (state.filter === 'active') list = list.filter(t => !t.done);
+  else if (state.filter === 'completed') list = list.filter(t => t.done);
+  if (state.sort === 'priority') {
+    const p = { high: 0, medium: 1, low: 2 };
+    list.sort((a, b) => p[a.priority] - p[b.priority] || b.id - a.id);
+  } else {
+    list.sort((a, b) => b.id - a.id);
+  }
+  return list;
+}
+
+function renderCategories() {
+  const el = document.getElementById('categoryList');
+  el.innerHTML = state.categories.map(c => {
+    const count = c.id === 'all' ? state.todos.length : state.todos.filter(t => t.category === c.id).length;
+    const active = state.activeCategory === c.id ? 'active' : '';
+    const del = c.removable ? `<button class="cat-delete" onclick="event.stopPropagation();removeCat('${c.id}')" title="删除分类">×</button>` : '';
+    return `<div class="cat-item ${active}" onclick="setCategory('${c.id}')">
+      <span class="cat-icon">${c.icon}</span>
+      <span>${c.name}</span>
+      <span class="cat-count">${count}</span>
+      ${del}
+    </div>`;
+  }).join('');
+
+  const sel = document.getElementById('catSelect');
+  const cur = sel.value;
+  sel.innerHTML = state.categories.filter(c => c.id !== 'all').map(c =>
+    `<option value="${c.id}">${c.icon} ${c.name}</option>`
+  ).join('');
+  if (cur && sel.querySelector(`option[value="${cur}"]`)) sel.value = cur;
+}
+
+function renderTodos() {
+  const list = getFiltered();
+  const el = document.getElementById('todoList');
+
+  if (list.length === 0) {
+    const msgs = {
+      all: ['暂无待办', '点击上方添加你的第一个待办事项'],
+      active: ['没有进行中的任务', '所有任务都已完成，太棒了！'],
+      completed: ['没有已完成的任务', '完成一些待办后这里会显示']
+    };
+    const m = msgs[state.filter] || msgs.all;
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📝</div>
+      <div class="empty-title">${m[0]}</div>
+      <div class="empty-desc">${m[1]}</div>
+    </div>`;
+  } else {
+    el.innerHTML = list.map(t => {
+      const cat = state.categories.find(c => c.id === t.category);
+      const catName = cat ? cat.name : '';
+      const catIcon = cat ? cat.icon : '';
+      const priLabel = { high: '高', medium: '中', low: '低' }[t.priority];
+      return `<div class="todo-item" data-id="${t.id}" draggable="true"
+        ondragstart="dragStart(event)" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" ondragend="dragEnd(event)">
+        <div class="todo-checkbox ${t.done?'checked':''}" onclick="toggleTodo(${t.id})"></div>
+        <div class="priority-dot ${t.priority}"></div>
+        <div class="todo-content">
+          <div class="todo-text ${t.done?'done':''}">${escHtml(t.text)}</div>
+          <div class="todo-meta">
+            <span class="tag">${catIcon} ${catName}</span>
+            <span>${priLabel}优先级</span>
+            <span>${formatDate(t.created)}</span>
+          </div>
+        </div>
+        <button class="todo-delete" onclick="deleteTodo(${t.id})" title="删除">🗑</button>
+      </div>`;
+    }).join('');
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  let total = state.todos;
+  if (state.activeCategory !== 'all') total = total.filter(t => t.category === state.activeCategory);
+  const done = total.filter(t => t.done).length;
+  const pct = total.length ? Math.round(done / total.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = pct + '%';
+}
+
+function setCategory(id) {
+  state.activeCategory = id;
+  const cat = state.categories.find(c => c.id === id);
+  document.getElementById('mainTitle').textContent = cat ? cat.icon + ' ' + cat.name : '全部待办';
+  save();
+  renderCategories();
+  renderTodos();
+}
+
+function setFilter(f, btn) {
+  state.filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  save();
+  renderTodos();
+}
+
+function setSort(s) {
+  state.sort = s;
+  save();
+  renderTodos();
+}
+
+function addTodo() {
+  const input = document.getElementById('todoInput');
+  const text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  const category = document.getElementById('catSelect').value;
+  const priority = document.getElementById('prioritySelect').value;
+  state.todos.push({
+    id: state.nextId++,
+    text,
+    category,
+    priority,
+    done: false,
+    created: Date.now()
+  });
+  input.value = '';
+  input.focus();
+  save();
+  renderCategories();
+  renderTodos();
+  showToast('待办已添加 ✓');
+}
+
+function toggleTodo(id) {
+  const t = state.todos.find(t => t.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  const el = document.querySelector(`.todo-item[data-id="${id}"]`);
+  if (el && t.done) el.classList.add('completing');
+  save();
+  renderCategories();
+  setTimeout(() => renderTodos(), t.done ? 300 : 0);
+  showToast(t.done ? '已完成 🎉' : '已恢复');
+}
+
+function deleteTodo(id) {
+  const el = document.querySelector(`.todo-item[data-id="${id}"]`);
+  if (el) {
+    el.style.animation = 'removeAnim .3s forwards';
+    setTimeout(() => {
+      state.todos = state.todos.filter(t => t.id !== id);
+      save();
+      renderCategories();
+      renderTodos();
+    }, 280);
+  } else {
+    state.todos = state.todos.filter(t => t.id !== id);
+    save();
+    renderCategories();
+    renderTodos();
+  }
+  showToast('已删除');
+}
+
+function showAddCat() {
+  const area = document.getElementById('addCatArea');
+  area.innerHTML = `<div class="add-cat-input">
+    <input type="text" id="newCatInput" placeholder="分类名称..." onkeydown="if(event.key==='Enter')addCat();if(event.key==='Escape')cancelAddCat()">
+    <button onclick="addCat()">✓</button>
+  </div>`;
+  document.getElementById('newCatInput').focus();
+}
+
+function addCat() {
+  const input = document.getElementById('newCatInput');
+  const name = input.value.trim();
+  if (!name) return;
+  const icons = ['📁','📌','🎯','✨','🔖','📎','💎','🌟'];
+  const icon = icons[Math.floor(Math.random() * icons.length)];
+  const id = 'cat_' + Date.now();
+  state.categories.push({ id, name, icon, removable: true });
+  save();
+  renderCategories();
+  resetAddCat();
+  showToast('分类已添加');
+}
+
+function cancelAddCat() { resetAddCat(); }
+
+function resetAddCat() {
+  document.getElementById('addCatArea').innerHTML = `<button class="add-cat-btn" id="addCatBtn" onclick="showAddCat()">＋ 添加分类</button>`;
+}
+
+function removeCat(id) {
+  state.categories = state.categories.filter(c => c.id !== id);
+  state.todos = state.todos.filter(t => t.category !== id);
+  if (state.activeCategory === id) setCategory('all');
+  save();
+  renderCategories();
+  renderTodos();
+  showToast('分类已删除');
+}
+
+let dragId = null;
+function dragStart(e) {
+  dragId = parseInt(e.currentTarget.dataset.id);
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function dragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function drop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const targetId = parseInt(e.currentTarget.dataset.id);
+  if (dragId === targetId) return;
+  const fromIdx = state.todos.findIndex(t => t.id === dragId);
+  const toIdx = state.todos.findIndex(t => t.id === targetId);
+  if (fromIdx < 0 || toIdx < 0) return;
+  const [item] = state.todos.splice(fromIdx, 1);
+  state.todos.splice(toIdx, 0, item);
+  save();
+  renderTodos();
+}
+function dragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  dragId = null;
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
+  if (diff < 172800000) return '昨天';
+  return (d.getMonth()+1) + '/' + d.getDate();
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+load();
+renderCategories();
+renderTodos();
+</script>
+</body>
+</html>

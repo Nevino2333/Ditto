@@ -1,0 +1,20 @@
+{
+  "id": "com.ditto.todo",
+  "name": "Ditto Todo",
+  "version": "1.0.0",
+  "description": "高效待办事项管理，支持分类与优先级",
+  "icon": "✅",
+  "entry": "frontend/index.html",
+  "category": "productivity",
+  "sandbox": "trusted",
+  "permissions": ["storage"],
+  "type": "app",
+  "window": {
+    "width": 520,
+    "height": 640,
+    "minWidth": 380,
+    "minHeight": 480,
+    "resizable": true,
+    "maximizable": true
+  }
+}

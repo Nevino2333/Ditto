@@ -1,0 +1,25 @@
+{
+  "id": "com.ditto.sample",
+  "name": "Sample App",
+  "version": "1.0.0",
+  "description": "A sample application for testing",
+  "icon": "icon.svg",
+  "entry": "frontend/index.html",
+  "category": "utility",
+  "sandbox": "strict",
+  "permissions": ["fs.read", "net.request"],
+  "type": "app",
+  "window": {
+    "width": 800,
+    "height": 600,
+    "minWidth": 400,
+    "minHeight": 300,
+    "resizable": true,
+    "maximizable": true
+  },
+  "backend": {
+    "entry": "backend/index.ts",
+    "type": "cell",
+    "healthCheck": "/health"
+  }
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ditto Quote</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    font-family: 'Georgia', 'Noto Serif SC', serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    padding: 24px;
+    user-select: none;
+  }
+  .quote-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 340px;
+    cursor: pointer;
+    gap: 16px;
+  }
+  .quote-mark {
+    font-size: 32px;
+    color: #e94560;
+    line-height: 1;
+    opacity: 0.6;
+  }
+  .quote-text {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #d0d0e8;
+    letter-spacing: 0.5px;
+    transition: opacity 0.6s ease;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+  }
+  .quote-text.fading { opacity: 0; }
+  .quote-author {
+    font-size: 13px;
+    color: #e94560;
+    letter-spacing: 2px;
+    transition: opacity 0.6s ease;
+    font-style: italic;
+  }
+  .quote-author.fading { opacity: 0; }
+  .quote-divider {
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #e94560, transparent);
+    border-radius: 1px;
+  }
+  .quote-date {
+    font-size: 11px;
+    color: #4a4a6a;
+    letter-spacing: 1px;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .quote-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .dot-indicator {
+    display: flex;
+    gap: 4px;
+  }
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #3a3a5a;
+    transition: background 0.3s;
+  }
+  .dot.active { background: #e94560; }
+  .progress-bar {
+    width: 100%;
+    height: 2px;
+    background: #2a2a4a;
+    border-radius: 1px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e94560, #ff6b8a);
+    border-radius: 1px;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+</style>
+</head>
+<body>
+<div class="quote-container" id="quoteContainer">
+  <div class="quote-mark">"</div>
+  <div class="quote-text" id="quoteText"></div>
+  <div class="quote-divider"></div>
+  <div class="quote-author" id="quoteAuthor"></div>
+  <div class="quote-footer">
+    <div class="quote-date" id="quoteDate"></div>
+    <div class="dot-indicator" id="dotIndicator"></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+<script>
+(function() {
+  var quotes = [
+    { text: "学而不思则罔，思而不学则殆。", author: "孔子" },
+    { text: "千里之行，始于足下。", author: "老子" },
+    { text: "天行健，君子以自强不息。", author: "《周易》" },
+    { text: "路漫漫其修远兮，吾将上下而求索。", author: "屈原" },
+    { text: "不积跬步，无以至千里；不积小流，无以成江海。", author: "荀子" },
+    { text: "宝剑锋从磨砺出，梅花香自苦寒来。", author: "古训" },
+    { text: "业精于勤，荒于嬉；行成于思，毁于随。", author: "韩愈" },
+    { text: "纸上得来终觉浅，绝知此事要躬行。", author: "陆游" },
+    { text: "山重水复疑无路，柳暗花明又一村。", author: "陆游" },
+    { text: "长风破浪会有时，直挂云帆济沧海。", author: "李白" },
+    { text: "天生我材必有用，千金散尽还复来。", author: "李白" },
+    { text: "会当凌绝顶，一览众山小。", author: "杜甫" },
+    { text: "博观而约取，厚积而薄发。", author: "苏轼" },
+    { text: "古之立大事者，不惟有超世之才，亦必有坚忍不拔之志。", author: "苏轼" },
+    { text: "天下事以难而废者十之一，以惰而废者十之九。", author: "颜之推" },
+    { text: "海纳百川，有容乃大；壁立千仞，无欲则刚。", author: "林则徐" },
+    { text: "苟利国家生死以，岂因祸福避趋之。", author: "林则徐" },
+    { text: "为中华之崛起而读书。", author: "周恩来" },
+    { text: "世上无难事，只要肯登攀。", author: "毛泽东" },
+    { text: "生活不是等待风暴过去，而是学会在雨中翩翩起舞。", author: "维维安·格林" },
+    { text: "知之者不如好之者，好之者不如乐之者。", author: "孔子" },
+    { text: "三军可夺帅也，匹夫不可夺志也。", author: "孔子" },
+    { text: "志不强者智不达，言不信者行不果。", author: "墨子" },
+    { text: "穷则独善其身，达则兼善天下。", author: "孟子" }
+  ];
+
+  var currentIndex = 0;
+  var rotateInterval = 30000;
+  var progressStart = Date.now();
+  var quoteText = document.getElementById('quoteText');
+  var quoteAuthor = document.getElementById('quoteAuthor');
+  var quoteDate = document.getElementById('quoteDate');
+  var progressFill = document.getElementById('progressFill');
+  var dotIndicator = document.getElementById('dotIndicator');
+  var quoteContainer = document.getElementById('quoteContainer');
+
+  function getDailyIndex() {
+    var now = new Date();
+    var seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+    return seed % quotes.length;
+  }
+
+  function showQuote(index, animate) {
+    if (animate) {
+      quoteText.classList.add('fading');
+      quoteAuthor.classList.add('fading');
+      setTimeout(function() {
+        currentIndex = index;
+        quoteText.textContent = quotes[index].text;
+        quoteAuthor.textContent = '— ' + quotes[index].author;
+        quoteText.classList.remove('fading');
+        quoteAuthor.classList.remove('fading');
+        updateDots();
+      }, 400);
+    } else {
+      currentIndex = index;
+      quoteText.textContent = quotes[index].text;
+      quoteAuthor.textContent = '— ' + quotes[index].author;
+      updateDots();
+    }
+    progressStart = Date.now();
+  }
+
+  function nextQuote() {
+    var next = (currentIndex + 1) % quotes.length;
+    showQuote(next, true);
+  }
+
+  function updateDots() {
+    var dots = dotIndicator.querySelectorAll('.dot');
+    dots.forEach(function(d, i) {
+      d.classList.toggle('active', i === currentIndex);
+    });
+  }
+
+  function initDots() {
+    var maxDots = Math.min(quotes.length, 12);
+    for (var i = 0; i < maxDots; i++) {
+      var dot = document.createElement('div');
+      dot.className = 'dot';
+      dotIndicator.appendChild(dot);
+    }
+  }
+
+  function updateDate() {
+    var now = new Date();
+    var m = now.getMonth() + 1;
+    var d = now.getDate();
+    quoteDate.textContent = m + '月' + d + '日 · 每日一言';
+  }
+
+  function updateProgress() {
+    var elapsed = Date.now() - progressStart;
+    var pct = Math.min((elapsed / rotateInterval) * 100, 100);
+    progressFill.style.width = pct + '%';
+    if (elapsed >= rotateInterval) {
+      nextQuote();
+    }
+    requestAnimationFrame(updateProgress);
+  }
+
+  quoteContainer.addEventListener('click', nextQuote);
+
+  initDots();
+  showQuote(getDailyIndex(), false);
+  updateDate();
+  updateProgress();
+})();
+</script>
+</body>
+</html>

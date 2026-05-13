@@ -1,0 +1,20 @@
+{
+  "id": "widget.ditto.quote",
+  "name": "Ditto Quote",
+  "version": "1.0.0",
+  "description": "每日名言小组件，激励每一天",
+  "icon": "💬",
+  "entry": "frontend/index.html",
+  "category": "entertainment",
+  "sandbox": "trusted",
+  "permissions": [],
+  "type": "widget",
+  "window": {
+    "width": 360,
+    "height": 200,
+    "minWidth": 280,
+    "minHeight": 160,
+    "resizable": true,
+    "maximizable": false
+  }
+}

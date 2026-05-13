@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "@ditto/core": ["./packages/core/src"],
+      "@ditto/services": ["./packages/services/src"],
+      "@ditto/ui": ["./packages/ui/src"],
+      "@ditto/theme": ["./packages/theme/src"],
+      "@ditto/sdk": ["./packages/sdk/src"],
+      "@ditto/adapter": ["./packages/adapter/src"],
+      "@ditto/shared": ["./packages/shared/src"],
+      "@ditto/packager": ["./packages/packager/src"],
+      "@ditto/cli": ["./packages/cli/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "**/dist", "server", "tests"]
+}

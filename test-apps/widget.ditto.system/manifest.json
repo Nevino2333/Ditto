@@ -1,0 +1,20 @@
+{
+  "id": "widget.ditto.system",
+  "name": "Ditto System",
+  "version": "1.0.0",
+  "description": "系统状态监控小组件",
+  "icon": "📊",
+  "entry": "frontend/index.html",
+  "category": "utility",
+  "sandbox": "trusted",
+  "permissions": [],
+  "type": "widget",
+  "window": {
+    "width": 320,
+    "height": 280,
+    "minWidth": 260,
+    "minHeight": 220,
+    "resizable": true,
+    "maximizable": false
+  }
+}

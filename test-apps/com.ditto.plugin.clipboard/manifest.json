@@ -1,0 +1,20 @@
+{
+  "id": "com.ditto.plugin.clipboard",
+  "name": "Clipboard Manager",
+  "version": "1.0.0",
+  "description": "剪贴板历史管理插件，记录与搜索复制内容",
+  "icon": "📋",
+  "entry": "frontend/index.html",
+  "category": "utility",
+  "sandbox": "trusted",
+  "permissions": ["clipboard.read", "clipboard.write"],
+  "type": "plugin",
+  "window": {
+    "width": 400,
+    "height": 500,
+    "minWidth": 300,
+    "minHeight": 400,
+    "resizable": true,
+    "maximizable": true
+  }
+}

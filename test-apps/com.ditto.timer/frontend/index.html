@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ditto Timer - 番茄钟</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#1a1a2e;--bg2:#16213e;--accent:#e94560;--accent2:#ff6b81;
+  --text:#eaeaea;--text2:#a0a0b8;--glass:rgba(255,255,255,0.06);
+  --glass-border:rgba(255,255,255,0.1);--radius:16px;
+}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;
+  background-image:radial-gradient(ellipse at 20% 50%,rgba(233,69,96,0.08) 0%,transparent 60%),
+                    radial-gradient(ellipse at 80% 20%,rgba(22,33,62,0.6) 0%,transparent 50%);
+}
+.app{width:100%;max-width:400px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:20px}
+
+.tabs{
+  display:flex;gap:6px;background:var(--glass);
+  border:1px solid var(--glass-border);border-radius:12px;padding:4px;width:100%;
+}
+.tab{
+  flex:1;padding:8px 4px;border:none;background:transparent;color:var(--text2);
+  font-size:13px;font-weight:600;border-radius:9px;cursor:pointer;
+  transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;
+}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 12px rgba(233,69,96,0.4)}
+
+.timer-card{
+  background:var(--glass);border:1px solid var(--glass-border);
+  border-radius:var(--radius);padding:32px 24px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  width:100%;position:relative;overflow:hidden;
+}
+.timer-card::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle,rgba(233,69,96,0.03) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.ring-container{position:relative;width:220px;height:220px;margin:8px 0}
+.ring-svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:8}
+.ring-progress{
+  fill:none;stroke:url(#ringGrad);stroke-width:8;
+  stroke-linecap:round;transition:stroke-dashoffset .4s cubic-bezier(.4,0,.2,1);
+}
+.ring-glow{
+  fill:none;stroke:var(--accent);stroke-width:12;stroke-linecap:round;
+  opacity:0.15;filter:blur(6px);
+  transition:stroke-dashoffset .4s cubic-bezier(.4,0,.2,1);
+}
+.time-display{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;
+}
+.time-text{font-size:48px;font-weight:700;letter-spacing:2px;font-variant-numeric:tabular-nums}
+.time-label{font-size:12px;color:var(--text2);margin-top:2px;letter-spacing:1px}
+
+.controls{display:flex;gap:12px;align-items:center;margin-top:4px}
+.btn{
+  border:none;cursor:pointer;font-weight:600;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .25s cubic-bezier(.4,0,.2,1);
+}
+.btn-main{
+  width:64px;height:64px;background:var(--accent);color:#fff;font-size:22px;
+  box-shadow:0 4px 20px rgba(233,69,96,0.4);
+}
+.btn-main:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(233,69,96,0.5)}
+.btn-main:active{transform:scale(0.95)}
+.btn-sec{
+  width:44px;height:44px;background:var(--glass);color:var(--text2);
+  border:1px solid var(--glass-border);font-size:16px;
+}
+.btn-sec:hover{color:var(--text);background:rgba(255,255,255,0.1);transform:scale(1.06)}
+
+.custom-row{
+  display:flex;align-items:center;gap:8px;width:100%;
+  padding:0 4px;margin-top:-4px;
+}
+.custom-toggle{
+  font-size:12px;color:var(--text2);cursor:pointer;
+  display:flex;align-items:center;gap:4px;
+  transition:color .2s;user-select:none;
+}
+.custom-toggle:hover{color:var(--text)}
+.custom-toggle input{display:none}
+.custom-check{
+  width:14px;height:14px;border-radius:4px;border:1.5px solid var(--text2);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;font-size:9px;color:transparent;
+}
+.custom-toggle input:checked ~ .custom-check{
+  background:var(--accent);border-color:var(--accent);color:#fff;
+}
+.custom-input{
+  width:60px;padding:4px 8px;background:var(--glass);border:1px solid var(--glass-border);
+  border-radius:8px;color:var(--text);font-size:13px;text-align:center;outline:none;
+  transition:border-color .2s;
+}
+.custom-input:focus{border-color:var(--accent)}
+.custom-unit{font-size:12px;color:var(--text2)}
+
+.stats-card{
+  background:var(--glass);border:1px solid var(--glass-border);
+  border-radius:var(--radius);padding:16px 20px;width:100%;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.stats-title{font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600;letter-spacing:.5px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.stat-item{text-align:center}
+.stat-value{font-size:22px;font-weight:700;color:var(--accent2)}
+.stat-label{font-size:11px;color:var(--text2);margin-top:2px}
+
+.sessions{
+  display:flex;gap:6px;align-items:center;justify-content:center;
+  margin-top:4px;flex-wrap:wrap;
+}
+.session-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--glass);border:1.5px solid var(--glass-border);
+  transition:all .3s;
+}
+.session-dot.filled{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px rgba(233,69,96,0.4)}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.running .time-text{animation:pulse 2s ease-in-out infinite}
+
+@keyframes completePulse{
+  0%{transform:translate(-50%,-50%) scale(1)}
+  50%{transform:translate(-50%,-50%) scale(1.05)}
+  100%{transform:translate(-50%,-50%) scale(1)}
+}
+.complete .time-display{animation:completePulse .6s ease-in-out 3}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <button class="tab active" data-mode="pomodoro" data-time="25">番茄专注</button>
+    <button class="tab" data-mode="short" data-time="5">短休息</button>
+    <button class="tab" data-mode="long" data-time="15">长休息</button>
+  </div>
+
+  <div class="timer-card" id="timerCard">
+    <div class="ring-container">
+      <svg class="ring-svg" viewBox="0 0 220 220">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#e94560"/>
+            <stop offset="100%" stop-color="#ff6b81"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-glow" cx="110" cy="110" r="96" id="ringGlow"/>
+        <circle class="ring-bg" cx="110" cy="110" r="96"/>
+        <circle class="ring-progress" cx="110" cy="110" r="96" id="ringProgress"/>
+      </svg>
+      <div class="time-display">
+        <div class="time-text" id="timeText">25:00</div>
+        <div class="time-label" id="timeLabel">番茄专注</div>
+      </div>
+    </div>
+
+    <div class="sessions" id="sessions"></div>
+
+    <div class="controls">
+      <button class="btn btn-sec" id="btnReset" title="重置">↺</button>
+      <button class="btn btn-main" id="btnStart">▶</button>
+      <button class="btn btn-sec" id="btnSkip" title="跳过">⏭</button>
+    </div>
+
+    <div class="custom-row">
+      <label class="custom-toggle">
+        <input type="checkbox" id="customCheck">
+        <span class="custom-check">✓</span>
+        自定义时长
+      </label>
+      <input type="number" class="custom-input" id="customMin" min="1" max="120" value="25" disabled>
+      <span class="custom-unit">分钟</span>
+    </div>
+  </div>
+
+  <div class="stats-card">
+    <div class="stats-title">📊 今日统计</div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value" id="statFocus">0</div>
+        <div class="stat-label">专注(分钟)</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statSessions">0</div>
+        <div class="stat-label">完成番茄</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statStreak">0</div>
+        <div class="stat-label">连续完成</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const CIRCUMFERENCE = 2 * Math.PI * 96;
+  const ringProgress = document.getElementById('ringProgress');
+  const ringGlow = document.getElementById('ringGlow');
+  const timeText = document.getElementById('timeText');
+  const timeLabel = document.getElementById('timeLabel');
+  const timerCard = document.getElementById('timerCard');
+  const btnStart = document.getElementById('btnStart');
+  const btnReset = document.getElementById('btnReset');
+  const btnSkip = document.getElementById('btnSkip');
+  const sessionsEl = document.getElementById('sessions');
+  const customCheck = document.getElementById('customCheck');
+  const customMin = document.getElementById('customMin');
+  const statFocus = document.getElementById('statFocus');
+  const statSessions = document.getElementById('statSessions');
+  const statStreak = document.getElementById('statStreak');
+  const tabs = document.querySelectorAll('.tab');
+
+  const MODES = {
+    pomodoro: { label: '番茄专注', time: 25 },
+    short: { label: '短休息', time: 5 },
+    long: { label: '长休息', time: 15 }
+  };
+
+  let currentMode = 'pomodoro';
+  let totalTime = 25 * 60;
+  let remainingTime = totalTime;
+  let isRunning = false;
+  let intervalId = null;
+  let completedPomodoros = 0;
+  let audioCtx = null;
+
+  ringProgress.style.strokeDasharray = CIRCUMFERENCE;
+  ringProgress.style.strokeDashoffset = '0';
+  ringGlow.style.strokeDasharray = CIRCUMFERENCE;
+  ringGlow.style.strokeDashoffset = '0';
+
+  function getTodayKey() {
+    const d = new Date();
+    return `ditto_timer_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+  }
+
+  function loadStats() {
+    try {
+      const data = JSON.parse(localStorage.getItem(getTodayKey()) || '{}');
+      statFocus.textContent = data.focusMinutes || 0;
+      statSessions.textContent = data.sessions || 0;
+      statStreak.textContent = data.streak || 0;
+      completedPomodoros = data.sessions || 0;
+      renderSessions();
+    } catch(e) {
+      statFocus.textContent = 0;
+      statSessions.textContent = 0;
+      statStreak.textContent = 0;
+    }
+  }
+
+  function saveStats(focusMin, sessions, streak) {
+    localStorage.setItem(getTodayKey(), JSON.stringify({
+      focusMinutes: focusMin,
+      sessions: sessions,
+      streak: streak
+    }));
+  }
+
+  function renderSessions() {
+    const total = 8;
+    let html = '';
+    for (let i = 0; i < total; i++) {
+      html += `<div class="session-dot${i < completedPomodoros ? ' filled' : ''}"></div>`;
+    }
+    sessionsEl.innerHTML = html;
+  }
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function updateDisplay() {
+    timeText.textContent = formatTime(remainingTime);
+    const progress = 1 - (remainingTime / totalTime);
+    const offset = CIRCUMFERENCE * (1 - progress);
+    ringProgress.style.strokeDashoffset = offset;
+    ringGlow.style.strokeDashoffset = offset;
+  }
+
+  function setMode(mode) {
+    if (isRunning) stopTimer();
+    currentMode = mode;
+    const m = MODES[mode];
+    timeLabel.textContent = m.label;
+    if (customCheck.checked) {
+      const v = parseInt(customMin.value) || m.time;
+      totalTime = Math.max(1, Math.min(120, v)) * 60;
+    } else {
+      totalTime = m.time * 60;
+      customMin.value = m.time;
+    }
+    remainingTime = totalTime;
+    timerCard.classList.remove('complete');
+    updateDisplay();
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  }
+
+  function startTimer() {
+    if (remainingTime <= 0) return;
+    isRunning = true;
+    btnStart.textContent = '⏸';
+    timerCard.classList.add('running');
+    timerCard.classList.remove('complete');
+    intervalId = setInterval(() => {
+      remainingTime--;
+      if (remainingTime <= 0) {
+        remainingTime = 0;
+        updateDisplay();
+        onTimerComplete();
+        return;
+      }
+      updateDisplay();
+    }, 1000);
+  }
+
+  function stopTimer() {
+    isRunning = false;
+    btnStart.textContent = '▶';
+    timerCard.classList.remove('running');
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+
+  function resetTimer() {
+    stopTimer();
+    timerCard.classList.remove('complete');
+    const m = MODES[currentMode];
+    if (customCheck.checked) {
+      const v = parseInt(customMin.value) || m.time;
+      totalTime = Math.max(1, Math.min(120, v)) * 60;
+    } else {
+      totalTime = m.time * 60;
+    }
+    remainingTime = totalTime;
+    updateDisplay();
+  }
+
+  function onTimerComplete() {
+    stopTimer();
+    timerCard.classList.add('complete');
+    playSound();
+
+    if (currentMode === 'pomodoro') {
+      completedPomodoros++;
+      const focusMin = parseInt(statFocus.textContent) + MODES.pomodoro.time;
+      const sessions = completedPomodoros;
+      const streak = parseInt(statStreak.textContent) + 1;
+      statFocus.textContent = focusMin;
+      statSessions.textContent = sessions;
+      statStreak.textContent = streak;
+      saveStats(focusMin, sessions, streak);
+      renderSessions();
+
+      if (completedPomodoros % 4 === 0) {
+        setTimeout(() => setMode('long'), 1500);
+      } else {
+        setTimeout(() => setMode('short'), 1500);
+      }
+    } else {
+      setTimeout(() => setMode('pomodoro'), 1500);
+    }
+  }
+
+  function playSound() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      [0, 0.2, 0.4].forEach(delay => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now + delay);
+        gain.gain.setValueAtTime(0.3, now + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.15);
+        osc.start(now + delay);
+        osc.stop(now + delay + 0.15);
+      });
+    } catch(e) {}
+  }
+
+  btnStart.addEventListener('click', () => {
+    if (isRunning) stopTimer(); else startTimer();
+  });
+
+  btnReset.addEventListener('click', resetTimer);
+
+  btnSkip.addEventListener('click', () => {
+    if (isRunning) stopTimer();
+    onTimerComplete();
+  });
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => setMode(tab.dataset.mode));
+  });
+
+  customCheck.addEventListener('change', () => {
+    customMin.disabled = !customCheck.checked;
+    if (customCheck.checked) {
+      const v = parseInt(customMin.value) || MODES[currentMode].time;
+      customMin.value = v;
+      if (!isRunning) {
+        totalTime = Math.max(1, Math.min(120, v)) * 60;
+        remainingTime = totalTime;
+        updateDisplay();
+      }
+    } else {
+      if (!isRunning) setMode(currentMode);
+    }
+  });
+
+  customMin.addEventListener('change', () => {
+    if (!customCheck.checked) return;
+    const v = parseInt(customMin.value) || MODES[currentMode].time;
+    customMin.value = Math.max(1, Math.min(120, v));
+    if (!isRunning) {
+      totalTime = customMin.value * 60;
+      remainingTime = totalTime;
+      updateDisplay();
+    }
+  });
+
+  loadStats();
+  updateDisplay();
+})();
+</script>
+</body>
+</html>

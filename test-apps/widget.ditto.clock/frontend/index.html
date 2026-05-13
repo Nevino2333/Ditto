@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ditto Clock</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f1a;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+  .clock-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .analog-wrap {
+    position: relative;
+    width: 160px;
+    height: 160px;
+  }
+  .analog-wrap svg {
+    width: 100%;
+    height: 100%;
+  }
+  .clock-face { fill: #16162a; stroke: #2a2a4a; stroke-width: 2; }
+  .tick-major { stroke: #6a6a9a; stroke-width: 2; stroke-linecap: round; }
+  .tick-minor { stroke: #3a3a5a; stroke-width: 1; stroke-linecap: round; }
+  .hand-hour { stroke: #c0c0e0; stroke-width: 3.5; stroke-linecap: round; }
+  .hand-minute { stroke: #a0a0d0; stroke-width: 2.5; stroke-linecap: round; }
+  .hand-second { stroke: #ff6b6b; stroke-width: 1.2; stroke-linecap: round; }
+  .center-dot { fill: #ff6b6b; }
+  .number { fill: #8888bb; font-size: 11px; font-family: 'Segoe UI', sans-serif; text-anchor: middle; dominant-baseline: central; }
+  .digital-wrap {
+    text-align: center;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .digital-wrap.active { display: flex; }
+  .analog-wrap.hidden { display: none; }
+  .digital-time {
+    font-size: 48px;
+    font-weight: 200;
+    letter-spacing: 4px;
+    color: #e0e0ff;
+    font-variant-numeric: tabular-nums;
+  }
+  .digital-time .sec {
+    font-size: 24px;
+    color: #ff6b6b;
+    font-weight: 300;
+  }
+  .date-display {
+    font-size: 13px;
+    color: #6a6a9a;
+    letter-spacing: 2px;
+  }
+  .toggle-hint {
+    font-size: 10px;
+    color: #3a3a5a;
+    margin-top: 4px;
+    transition: opacity 0.3s;
+  }
+  .clock-container:hover .toggle-hint { opacity: 1; }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .center-dot { animation: pulse-dot 1s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="clock-container" id="clockContainer">
+  <div class="analog-wrap" id="analogWrap">
+    <svg viewBox="0 0 200 200" id="analogSvg">
+      <circle class="clock-face" cx="100" cy="100" r="94"/>
+      <g id="ticks"></g>
+      <g id="numbers"></g>
+      <line class="hand-hour" id="hourHand" x1="100" y1="100" x2="100" y2="50"/>
+      <line class="hand-minute" id="minuteHand" x1="100" y1="100" x2="100" y2="32"/>
+      <line class="hand-second" id="secondHand" x1="100" y1="110" x2="100" y2="26"/>
+      <circle class="center-dot" cx="100" cy="100" r="3.5"/>
+    </svg>
+  </div>
+  <div class="digital-wrap" id="digitalWrap">
+    <div class="digital-time" id="digitalTime"></div>
+  </div>
+  <div class="date-display" id="dateDisplay"></div>
+  <div class="toggle-hint">点击切换模式</div>
+</div>
+<script>
+(function() {
+  var isAnalog = true;
+  var ticksGroup = document.getElementById('ticks');
+  var numbersGroup = document.getElementById('numbers');
+  var hourHand = document.getElementById('hourHand');
+  var minuteHand = document.getElementById('minuteHand');
+  var secondHand = document.getElementById('secondHand');
+  var digitalTime = document.getElementById('digitalTime');
+  var dateDisplay = document.getElementById('dateDisplay');
+  var analogWrap = document.getElementById('analogWrap');
+  var digitalWrap = document.getElementById('digitalWrap');
+  var clockContainer = document.getElementById('clockContainer');
+
+  for (var i = 0; i < 60; i++) {
+    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    var angle = (i * 6) * Math.PI / 180;
+    var isMajor = i % 5 === 0;
+    var outerR = 90;
+    var innerR = isMajor ? 78 : 84;
+    line.setAttribute('x1', 100 + innerR * Math.sin(angle));
+    line.setAttribute('y1', 100 - innerR * Math.cos(angle));
+    line.setAttribute('x2', 100 + outerR * Math.sin(angle));
+    line.setAttribute('y2', 100 - outerR * Math.cos(angle));
+    line.setAttribute('class', isMajor ? 'tick-major' : 'tick-minor');
+    ticksGroup.appendChild(line);
+  }
+
+  var numLabels = [12,1,2,3,4,5,6,7,8,9,10,11];
+  for (var i = 0; i < 12; i++) {
+    var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    var angle = (i * 30) * Math.PI / 180;
+    var r = 68;
+    text.setAttribute('x', 100 + r * Math.sin(angle));
+    text.setAttribute('y', 100 - r * Math.cos(angle));
+    text.setAttribute('class', 'number');
+    text.textContent = numLabels[i];
+    numbersGroup.appendChild(text);
+  }
+
+  function updateClock() {
+    var now = new Date();
+    var h = now.getHours();
+    var m = now.getMinutes();
+    var s = now.getSeconds();
+    var ms = now.getMilliseconds();
+    var sAngle = (s + ms / 1000) * 6;
+    var mAngle = (m + s / 60) * 6;
+    var hAngle = ((h % 12) + m / 60) * 30;
+
+    hourHand.setAttribute('transform', 'rotate(' + hAngle + ', 100, 100)');
+    minuteHand.setAttribute('transform', 'rotate(' + mAngle + ', 100, 100)');
+    secondHand.setAttribute('transform', 'rotate(' + sAngle + ', 100, 100)');
+
+    var hStr = String(h).padStart(2, '0');
+    var mStr = String(m).padStart(2, '0');
+    var sStr = String(s).padStart(2, '0');
+    digitalTime.innerHTML = hStr + ':' + mStr + '<span class="sec">:' + sStr + '</span>';
+
+    var days = ['日','一','二','三','四','五','六'];
+    dateDisplay.textContent = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 周' + days[now.getDay()];
+
+    requestAnimationFrame(updateClock);
+  }
+
+  clockContainer.addEventListener('click', function() {
+    isAnalog = !isAnalog;
+    analogWrap.classList.toggle('hidden', !isAnalog);
+    digitalWrap.classList.toggle('active', !isAnalog);
+  });
+
+  updateClock();
+})();
+</script>
+</body>
+</html>

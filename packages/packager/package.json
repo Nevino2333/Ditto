@@ -1,0 +1,24 @@
+{
+  "name": "@ditto/packager",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ditto/shared": "workspace:*",
+    "archiver": "^7.0.0",
+    "decompress": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.0",
+    "@types/decompress": "^4.2.7",
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0"
+  }
+}

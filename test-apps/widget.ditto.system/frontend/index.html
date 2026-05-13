@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ditto System</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    padding: 16px;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #21262d;
+  }
+  .header-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e6edf3;
+    letter-spacing: 0.5px;
+  }
+  .header-uptime {
+    font-size: 11px;
+    color: #484f58;
+    font-variant-numeric: tabular-nums;
+  }
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .metric-label {
+    font-size: 11px;
+    color: #8b949e;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .metric-label .icon {
+    font-size: 12px;
+  }
+  .metric-value {
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .bar-track {
+    width: 100%;
+    height: 6px;
+    background: #161b22;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+  .bar-cpu { background: linear-gradient(90deg, #238636, #3fb950); }
+  .bar-mem { background: linear-gradient(90deg, #1f6feb, #58a6ff); }
+  .bar-disk { background: linear-gradient(90deg, #9e6a03, #d29922); }
+  .sparkline-wrap {
+    width: 100%;
+    height: 36px;
+    background: #161b22;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .sparkline-wrap canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .net-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #484f58;
+    margin-top: 2px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+  }
+  .stat-card {
+    flex: 1;
+    background: #161b22;
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border: 1px solid #21262d;
+  }
+  .stat-card .stat-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e6edf3;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-card .stat-label {
+    font-size: 9px;
+    color: #484f58;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .val-green { color: #3fb950; }
+  .val-blue { color: #58a6ff; }
+  .val-yellow { color: #d29922; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-title">📊 System Monitor</div>
+  <div class="header-uptime" id="uptime">UP 0:00:00</div>
+</div>
+
+<div class="metric">
+  <div class="metric-header">
+    <span class="metric-label"><span class="icon">⚡</span> CPU</span>
+    <span class="metric-value val-green" id="cpuVal">0%</span>
+  </div>
+  <div class="bar-track"><div class="bar-fill bar-cpu" id="cpuBar" style="width:0%"></div></div>
+</div>
+
+<div class="metric">
+  <div class="metric-header">
+    <span class="metric-label"><span class="icon">🧠</span> Memory</span>
+    <span class="metric-value val-blue" id="memVal">0%</span>
+  </div>
+  <div class="bar-track"><div class="bar-fill bar-mem" id="memBar" style="width:0%"></div></div>
+</div>
+
+<div class="metric">
+  <div class="metric-header">
+    <span class="metric-label"><span class="icon">💾</span> Disk</span>
+    <span class="metric-value val-yellow" id="diskVal">0%</span>
+  </div>
+  <div class="bar-track"><div class="bar-fill bar-disk" id="diskBar" style="width:0%"></div></div>
+</div>
+
+<div class="metric">
+  <div class="metric-header">
+    <span class="metric-label"><span class="icon">🌐</span> Network</span>
+    <span class="metric-value" style="color:#8b949e" id="netVal">0 KB/s</span>
+  </div>
+  <div class="sparkline-wrap">
+    <canvas id="netCanvas"></canvas>
+  </div>
+  <div class="net-labels">
+    <span>↓ <span id="netDown">0 KB/s</span></span>
+    <span>↑ <span id="netUp">0 KB/s</span></span>
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-val val-green" id="appCount">0</div>
+    <div class="stat-label">Active Apps</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val val-blue" id="procCount">0</div>
+    <div class="stat-label">Processes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val val-yellow" id="tempVal">0°C</div>
+    <div class="stat-label">CPU Temp</div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var cpuVal = document.getElementById('cpuVal');
+  var cpuBar = document.getElementById('cpuBar');
+  var memVal = document.getElementById('memVal');
+  var memBar = document.getElementById('memBar');
+  var diskVal = document.getElementById('diskVal');
+  var diskBar = document.getElementById('diskBar');
+  var netVal = document.getElementById('netVal');
+  var netDown = document.getElementById('netDown');
+  var netUp = document.getElementById('netUp');
+  var netCanvas = document.getElementById('netCanvas');
+  var uptimeEl = document.getElementById('uptime');
+  var appCount = document.getElementById('appCount');
+  var procCount = document.getElementById('procCount');
+  var tempVal = document.getElementById('tempVal');
+
+  var cpu = 35, mem = 52, disk = 67;
+  var netData = [];
+  var maxNetPoints = 60;
+  var startTime = Date.now();
+
+  var ctx = netCanvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+
+  function resizeCanvas() {
+    var rect = netCanvas.parentElement.getBoundingClientRect();
+    netCanvas.width = rect.width * dpr;
+    netCanvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  function lerp(current, target, factor) {
+    return current + (target - current) * factor;
+  }
+
+  function simulate() {
+    var cpuTarget = clamp(cpu + (Math.random() - 0.45) * 18, 8, 95);
+    cpu = lerp(cpu, cpuTarget, 0.3);
+
+    var memTarget = clamp(mem + (Math.random() - 0.48) * 6, 30, 88);
+    mem = lerp(mem, memTarget, 0.2);
+
+    var downSpeed = clamp(Math.random() * 800 + 50, 0, 1200);
+    var upSpeed = clamp(Math.random() * 300 + 20, 0, 500);
+    var totalSpeed = downSpeed + upSpeed;
+
+    netData.push({ down: downSpeed, up: upSpeed, total: totalSpeed });
+    if (netData.length > maxNetPoints) netData.shift();
+
+    cpuVal.textContent = Math.round(cpu) + '%';
+    cpuBar.style.width = Math.round(cpu) + '%';
+    memVal.textContent = Math.round(mem) + '%';
+    memBar.style.width = Math.round(mem) + '%';
+    diskVal.textContent = disk + '%';
+    diskBar.style.width = disk + '%';
+
+    var speedStr = totalSpeed < 1024 ? Math.round(totalSpeed) + ' KB/s' : (totalSpeed / 1024).toFixed(1) + ' MB/s';
+    netVal.textContent = speedStr;
+    netDown.textContent = downSpeed < 1024 ? Math.round(downSpeed) + ' KB/s' : (downSpeed / 1024).toFixed(1) + ' MB/s';
+    netUp.textContent = upSpeed < 1024 ? Math.round(upSpeed) + ' KB/s' : (upSpeed / 1024).toFixed(1) + ' MB/s';
+
+    appCount.textContent = Math.round(clamp(8 + Math.random() * 6, 6, 16));
+    procCount.textContent = Math.round(clamp(120 + Math.random() * 40, 100, 180));
+    tempVal.textContent = Math.round(clamp(42 + cpu * 0.4 + (Math.random() - 0.5) * 4, 35, 85)) + '°C';
+
+    drawSparkline();
+  }
+
+  function drawSparkline() {
+    var rect = netCanvas.parentElement.getBoundingClientRect();
+    var w = rect.width;
+    var h = rect.height;
+    ctx.clearRect(0, 0, w, h);
+
+    if (netData.length < 2) return;
+
+    var maxVal = 0;
+    for (var i = 0; i < netData.length; i++) {
+      if (netData[i].total > maxVal) maxVal = netData[i].total;
+    }
+    maxVal = Math.max(maxVal, 100);
+
+    var stepX = w / (maxNetPoints - 1);
+
+    ctx.beginPath();
+    var startIdx = maxNetPoints - netData.length;
+    for (var i = 0; i < netData.length; i++) {
+      var x = (startIdx + i) * stepX;
+      var y = h - (netData[i].down / maxVal) * (h - 4) - 2;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = 'rgba(63, 185, 80, 0.7)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    for (var i = 0; i < netData.length; i++) {
+      var x = (startIdx + i) * stepX;
+      var y = h - (netData[i].up / maxVal) * (h - 4) - 2;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = 'rgba(88, 166, 255, 0.7)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    var lastX = (startIdx + netData.length - 1) * stepX;
+    var lastDownY = h - (netData[netData.length - 1].down / maxVal) * (h - 4) - 2;
+    ctx.moveTo(startIdx * stepX, h);
+    for (var i = 0; i < netData.length; i++) {
+      var x = (startIdx + i) * stepX;
+      var y = h - (netData[i].total / maxVal) * (h - 4) - 2;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(lastX, h);
+    ctx.closePath();
+    var grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, 'rgba(63, 185, 80, 0.15)');
+    grad.addColorStop(1, 'rgba(63, 185, 80, 0.01)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  function updateUptime() {
+    var elapsed = Math.floor((Date.now() - startTime) / 1000);
+    var hrs = Math.floor(elapsed / 3600);
+    var mins = Math.floor((elapsed % 3600) / 60);
+    var secs = elapsed % 60;
+    uptimeEl.textContent = 'UP ' + hrs + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+  }
+
+  for (var i = 0; i < maxNetPoints; i++) {
+    netData.push({ down: Math.random() * 200 + 50, up: Math.random() * 80 + 20, total: Math.random() * 280 + 70 });
+  }
+
+  simulate();
+  setInterval(simulate, 2000);
+  setInterval(updateUptime, 1000);
+  updateUptime();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ocean Theme</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #023e8a; color: #caf0f8; padding: 24px; }
+
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    h1 span { color: #00b4d8; }
+    .subtitle { color: #90e0ef; margin-bottom: 24px; font-size: 14px; }
+
+    .preview-box { background: #03045e; border: 1px solid #0077b6; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .preview-box h3 { font-size: 14px; color: #00b4d8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+    .color-swatch { border-radius: 8px; padding: 12px 8px; text-align: center; font-size: 11px; }
+    .color-swatch .name { font-weight: 600; margin-bottom: 4px; }
+    .color-swatch .value { opacity: 0.7; }
+
+    .typo-sample { margin-bottom: 8px; }
+    .typo-sample.h1 { font-size: 22px; font-weight: 700; }
+    .typo-sample.h2 { font-size: 18px; font-weight: 600; }
+    .typo-sample.body { font-size: 14px; font-weight: 400; }
+    .typo-sample.caption { font-size: 12px; color: #90e0ef; }
+    .typo-sample.mono { font-family: 'Consolas', 'Fira Code', monospace; font-size: 13px; background: rgba(0,119,182,0.3); padding: 4px 8px; border-radius: 4px; display: inline-block; }
+
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .demo-btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: transform 0.1s; }
+    .demo-btn:active { transform: scale(0.95); }
+
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .demo-card { background: rgba(0,119,182,0.2); border: 1px solid #005f8a; border-radius: 8px; padding: 16px; }
+    .demo-card h4 { font-size: 14px; margin-bottom: 6px; color: #00b4d8; }
+    .demo-card p { font-size: 12px; color: #90e0ef; line-height: 1.5; }
+
+    .apply-btn { background: #0077b6; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: background 0.15s; }
+    .apply-btn:hover { background: #0096c7; }
+
+    .status { margin-top: 12px; font-size: 13px; color: #06d6a0; opacity: 0; transition: opacity 0.3s; }
+    .status.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>🌊 <span>Ocean</span> Theme</h1>
+  <p class="subtitle">深邃海洋蓝色主题 — 宁静致远，沉浸式体验</p>
+
+  <div class="preview-box">
+    <h3>调色板</h3>
+    <div class="color-grid">
+      <div class="color-swatch" style="background:#0077b6;color:white"><div class="name">Primary</div><div class="value">#0077b6</div></div>
+      <div class="color-swatch" style="background:#00b4d8;color:white"><div class="name">Accent</div><div class="value">#00b4d8</div></div>
+      <div class="color-swatch" style="background:#023e8a;color:#caf0f8;border:1px solid #0077b6"><div class="name">Background</div><div class="value">#023e8a</div></div>
+      <div class="color-swatch" style="background:#03045e;color:#caf0f8;border:1px solid #0077b6"><div class="name">Surface</div><div class="value">#03045e</div></div>
+      <div class="color-swatch" style="background:#06d6a0;color:white"><div class="name">Success</div><div class="value">#06d6a0</div></div>
+      <div class="color-swatch" style="background:#ffd166;color:#03045e"><div class="name">Warning</div><div class="value">#ffd166</div></div>
+      <div class="color-swatch" style="background:#ef476f;color:white"><div class="name">Error</div><div class="value">#ef476f</div></div>
+      <div class="color-swatch" style="background:#48bfe3;color:#03045e"><div class="name">Info</div><div class="value">#48bfe3</div></div>
+    </div>
+  </div>
+
+  <div class="preview-box">
+    <h3>排版</h3>
+    <div class="typo-sample h1">海洋标题 Heading 1</div>
+    <div class="typo-sample h2">深海副标题 Heading 2</div>
+    <div class="typo-sample body">这是一段正文内容，展示海洋主题下的阅读体验。海风轻拂，波光粼粼。</div>
+    <div class="typo-sample caption">辅助说明文字 Caption</div>
+    <div class="typo-sample mono">const ocean = "deep-blue";</div>
+  </div>
+
+  <div class="preview-box">
+    <h3>按钮样式</h3>
+    <div class="btn-row">
+      <button class="demo-btn" style="background:#0077b6;color:white">Primary</button>
+      <button class="demo-btn" style="background:#00b4d8;color:white">Accent</button>
+      <button class="demo-btn" style="background:#06d6a0;color:#03045e">Success</button>
+      <button class="demo-btn" style="background:rgba(0,119,182,0.2);color:#caf0f8;border:1px solid #0077b6">Ghost</button>
+    </div>
+  </div>
+
+  <div class="preview-box">
+    <h3>卡片示例</h3>
+    <div class="card-grid">
+      <div class="demo-card">
+        <h4>🌊 潮汐</h4>
+        <p>海水的涨落遵循月球的引力，周而复始</p>
+      </div>
+      <div class="demo-card">
+        <h4>🐋 深海</h4>
+        <p>未知的深渊中蕴藏着无数生命的奥秘</p>
+      </div>
+    </div>
+  </div>
+
+  <button class="apply-btn" onclick="applyTheme()">应用主题</button>
+  <div class="status" id="status">✅ 主题已应用</div>
+
+  <script>
+    function applyTheme() {
+      const el = document.getElementById('status');
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>
