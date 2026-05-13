@@ -112,6 +112,7 @@ app.route('/api/apps', createInstallRoutes(cellManager, appsDir));
 app.route('/api/market', createMarketRoutes({
   cellManager,
   appsDir,
+  testAppsDir: process.env.TEST_APPS_DIR ?? path.resolve(process.cwd(), '..', 'test-apps'),
   githubToken: process.env.GITHUB_TOKEN,
   localDataDir: process.env.MARKET_DATA_DIR,
 }));

@@ -28,6 +28,7 @@ interface CacheEntry<T> {
 interface MarketRouteDeps {
   cellManager: AppCellManager;
   appsDir: string;
+  testAppsDir?: string;
   githubToken?: string;
   owner?: string;
   repo?: string;
@@ -55,10 +56,12 @@ const DEMO_APPS: AppStoreEntry[] = [
       version: '0.1.0',
       description: '轻量级 Markdown 笔记应用',
       icon: '📝',
+      type: 'app',
       entry: 'frontend/index.html',
       category: 'productivity',
       sandbox: 'trusted',
       permissions: ['storage'],
+      window: { width: 640, height: 480, minWidth: 400, minHeight: 300, resizable: true, maximizable: true },
     },
     market: {
       summary: '简洁高效的 Markdown 笔记应用',
@@ -87,10 +90,12 @@ const DEMO_APPS: AppStoreEntry[] = [
       version: '1.0.0',
       description: '简洁美观的科学计算器',
       icon: '🧮',
+      type: 'app',
       entry: 'frontend/index.html',
       category: 'utility',
       sandbox: 'trusted',
       permissions: [],
+      window: { width: 400, height: 560, minWidth: 320, minHeight: 400, resizable: true, maximizable: true },
     },
     market: {
       summary: '简洁美观的科学计算器，支持键盘操作',
@@ -116,11 +121,13 @@ const DEMO_APPS: AppStoreEntry[] = [
       name: 'Midnight Theme',
       version: '1.0.0',
       description: '优雅的午夜深色主题',
-      icon: '�',
+      icon: '🌙',
+      type: 'theme',
       entry: 'frontend/index.html',
       category: 'theme',
       sandbox: 'trusted',
       permissions: [],
+      window: { width: 480, height: 400, minWidth: 360, minHeight: 300, resizable: true, maximizable: true },
     },
     market: {
       summary: '优雅的午夜深色主题，护眼配色',
@@ -140,83 +147,57 @@ const DEMO_APPS: AppStoreEntry[] = [
     updatedAt: Date.now() - 86400000 * 4,
   },
   {
-    id: 'com.ditto.canvas',
-    manifest: {
-      id: 'com.ditto.canvas',
-      name: 'Ditto Canvas',
-      version: '0.1.0',
-      description: '创意画板应用',
-      icon: '🎨',
-      entry: 'index.html',
-      category: 'entertainment',
-      sandbox: 'trusted',
-      permissions: ['storage'],
-    },
-    market: {
-      summary: '专业级创意画板，释放你的创造力',
-      description: '# Ditto Canvas\n\n一款功能丰富的创意画板应用。\n\n## 特性\n\n- **多种画笔** — 铅笔、毛笔、马克笔、橡皮擦\n- **颜色面板** — HSL 色轮 + 自定义调色板\n- **图层系统** — 支持多图层编辑和混合',
-      category: 'entertainment',
-      tags: ['画板', '绘图', '创意', '设计'],
-      screenshots: [],
-      changelog: '',
-      downloadUrl: '',
-      publisher: 'Ditto Team',
-    },
-    rating: 4.5,
-    ratingCount: 2,
-    downloads: 86,
-    verified: true,
-    publishedAt: Date.now() - 86400000 * 9,
-    updatedAt: Date.now() - 86400000 * 2,
-  },
-  {
     id: 'com.ditto.weather',
     manifest: {
       id: 'com.ditto.weather',
       name: 'Ditto Weather',
-      version: '0.1.0',
-      description: '天气预报小组件',
+      version: '1.0.0',
+      description: '精美的天气预报应用，支持多城市切换',
       icon: '🌤️',
-      entry: 'index.html',
-      category: 'widget',
+      type: 'app',
+      entry: 'frontend/index.html',
+      category: 'utility',
       sandbox: 'trusted',
       permissions: ['network'],
+      window: { width: 480, height: 640, minWidth: 360, minHeight: 480, resizable: true, maximizable: true },
     },
     market: {
-      summary: '精美的天气预报小组件',
-      description: '# Ditto Weather\n\n天气小组件应用。\n\n## 特性\n\n- 实时天气数据\n- 7日天气预报\n- 空气质量指数',
-      category: 'widget',
-      tags: ['天气', '小组件', '预报'],
+      summary: '精美的天气预报应用，支持多城市切换',
+      description: '# Ditto Weather\n\n精美的天气预报应用，支持多城市切换。\n\n## 特性\n\n- **实时天气** — 精准实时天气数据\n- **多城市** — 支持多城市切换管理\n- **7日预报** — 未来7天天气预报\n- **空气质量** — 空气质量指数监测\n- **精美动画** — 天气状态动态展示',
+      category: 'utility',
+      tags: ['天气', '预报', '工具', '生活'],
       screenshots: [],
       changelog: '',
       downloadUrl: '',
       publisher: 'Ditto Team',
     },
-    rating: 4.0,
+    rating: 4.2,
     ratingCount: 1,
-    downloads: 52,
+    downloads: 67,
     verified: true,
-    publishedAt: Date.now() - 86400000 * 6,
-    updatedAt: Date.now() - 86400000 * 5,
+    publishedAt: Date.now() - 86400000 * 7,
+    updatedAt: Date.now() - 86400000 * 2,
   },
   {
-    id: 'com.ditto.code',
+    id: 'com.ditto.timer',
     manifest: {
-      id: 'com.ditto.code',
-      name: 'Ditto Code',
-      version: '0.1.0',
-      description: '轻量级代码编辑器',
-      icon: '💻',
-      entry: 'index.html',
-      category: 'development',
+      id: 'com.ditto.timer',
+      name: 'Ditto Timer',
+      version: '1.0.0',
+      description: '番茄钟与倒计时器，专注效率提升',
+      icon: '⏱️',
+      type: 'app',
+      entry: 'frontend/index.html',
+      category: 'productivity',
       sandbox: 'trusted',
-      permissions: ['storage', 'network'],
+      permissions: [],
+      window: { width: 400, height: 520, minWidth: 320, minHeight: 420, resizable: true, maximizable: true },
     },
     market: {
-      summary: '轻量级在线代码编辑器，支持语法高亮',
-      description: '# Ditto Code\n\n轻量级在线代码编辑器。\n\n## 特性\n\n- 语法高亮\n- 文件管理\n- 终端集成',
-      category: 'development',
-      tags: ['编辑器', '代码', '开发'],
+      summary: '番茄钟与倒计时器，专注效率提升',
+      description: '# Ditto Timer\n\n番茄钟与倒计时器，专注效率提升。\n\n## 特性\n\n- **番茄钟** — 经典25分钟工作法\n- **倒计时** — 自定义时长倒计时\n- **统计报告** — 专注时长统计分析\n- **提醒通知** — 时间到自动提醒\n- **白噪音** — 内置专注白噪音',
+      category: 'productivity',
+      tags: ['番茄钟', '倒计时', '效率', '专注'],
       screenshots: [],
       changelog: '',
       downloadUrl: '',
@@ -226,8 +207,360 @@ const DEMO_APPS: AppStoreEntry[] = [
     ratingCount: 4,
     downloads: 203,
     verified: true,
+    publishedAt: Date.now() - 86400000 * 3,
+    updatedAt: Date.now() - 86400000 * 1,
+  },
+  {
+    id: 'com.ditto.draw',
+    manifest: {
+      id: 'com.ditto.draw',
+      name: 'Ditto Draw',
+      version: '1.0.0',
+      description: '轻量级画板应用，支持多种画笔和颜色',
+      icon: '🎨',
+      type: 'app',
+      entry: 'frontend/index.html',
+      category: 'entertainment',
+      sandbox: 'trusted',
+      permissions: ['storage'],
+      window: { width: 800, height: 600, minWidth: 600, minHeight: 450, resizable: true, maximizable: true },
+    },
+    market: {
+      summary: '轻量级画板应用，支持多种画笔和颜色',
+      description: '# Ditto Draw\n\n轻量级画板应用，支持多种画笔和颜色。\n\n## 特性\n\n- **多种画笔** — 铅笔、毛笔、马克笔、橡皮擦\n- **颜色面板** — HSL 色轮 + 自定义调色板\n- **图层系统** — 支持多图层编辑和混合\n- **撤销重做** — 完整的操作历史记录\n- **导出分享** — 支持 PNG/JPG 导出',
+      category: 'entertainment',
+      tags: ['画板', '绘图', '创意', '设计'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 4.3,
+    ratingCount: 3,
+    downloads: 156,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 8,
+    updatedAt: Date.now() - 86400000 * 2,
+  },
+  {
+    id: 'com.ditto.todo',
+    manifest: {
+      id: 'com.ditto.todo',
+      name: 'Ditto Todo',
+      version: '1.0.0',
+      description: '高效待办事项管理，支持分类与优先级',
+      icon: '✅',
+      type: 'app',
+      entry: 'frontend/index.html',
+      category: 'productivity',
+      sandbox: 'trusted',
+      permissions: ['storage'],
+      window: { width: 520, height: 640, minWidth: 380, minHeight: 480, resizable: true, maximizable: true },
+    },
+    market: {
+      summary: '高效待办事项管理，支持分类与优先级',
+      description: '# Ditto Todo\n\n高效待办事项管理，支持分类与优先级。\n\n## 特性\n\n- **分类管理** — 自定义任务分类\n- **优先级** — 高/中/低优先级标记\n- **截止日期** — 设置任务截止时间\n- **完成统计** — 可视化完成率统计\n- **快捷操作** — 拖拽排序与批量操作',
+      category: 'productivity',
+      tags: ['待办', '任务', '效率', '管理'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 4.9,
+    ratingCount: 6,
+    downloads: 287,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 4,
+    updatedAt: Date.now() - 86400000 * 0.5,
+  },
+  {
+    id: 'com.ditto.code',
+    manifest: {
+      id: 'com.ditto.code',
+      name: 'Ditto Code',
+      version: '1.0.0',
+      description: '轻量级代码编辑器，支持语法高亮',
+      icon: '💻',
+      type: 'app',
+      entry: 'frontend/index.html',
+      category: 'development',
+      sandbox: 'trusted',
+      permissions: ['storage'],
+      window: { width: 800, height: 600, minWidth: 600, minHeight: 400, resizable: true, maximizable: true },
+    },
+    market: {
+      summary: '轻量级代码编辑器，支持语法高亮',
+      description: '# Ditto Code\n\n轻量级代码编辑器，支持语法高亮。\n\n## 特性\n\n- **语法高亮** — 支持50+编程语言\n- **文件管理** — 树形文件浏览器\n- **主题切换** — 多款编辑器主题\n- **快捷键** — VSCode 风格快捷键\n- **自动补全** — 智能代码补全',
+      category: 'development',
+      tags: ['编辑器', '代码', '开发', 'IDE'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 4.8,
+    ratingCount: 5,
+    downloads: 342,
+    verified: true,
     publishedAt: Date.now() - 86400000 * 15,
     updatedAt: Date.now() - 86400000 * 1,
+  },
+  {
+    id: 'com.ditto.calendar',
+    manifest: {
+      id: 'com.ditto.calendar',
+      name: 'Ditto Calendar',
+      version: '1.0.0',
+      description: '优雅的日历应用，支持事件管理',
+      icon: '📅',
+      type: 'app',
+      entry: 'frontend/index.html',
+      category: 'productivity',
+      sandbox: 'trusted',
+      permissions: ['storage'],
+      window: { width: 640, height: 560, minWidth: 480, minHeight: 400, resizable: true, maximizable: true },
+    },
+    market: {
+      summary: '优雅的日历应用，支持事件管理',
+      description: '# Ditto Calendar\n\n优雅的日历应用，支持事件管理。\n\n## 特性\n\n- **月/周/日视图** — 灵活切换查看方式\n- **事件管理** — 创建、编辑、删除事件\n- **提醒通知** — 事件开始前自动提醒\n- **重复事件** — 支持每日/每周/每月重复\n- **农历显示** — 同时显示农历日期',
+      category: 'productivity',
+      tags: ['日历', '日程', '效率', '时间'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 4.5,
+    ratingCount: 3,
+    downloads: 178,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 12,
+    updatedAt: Date.now() - 86400000 * 3,
+  },
+  {
+    id: 'widget.ditto.clock',
+    manifest: {
+      id: 'widget.ditto.clock',
+      name: 'Ditto Clock Widget',
+      version: '1.0.0',
+      description: '精美的模拟/数字时钟小组件',
+      icon: '🕐',
+      type: 'widget',
+      entry: 'frontend/index.html',
+      category: 'utility',
+      sandbox: 'trusted',
+      permissions: [],
+      window: { width: 320, height: 240, minWidth: 200, minHeight: 150, resizable: true, maximizable: false },
+    },
+    market: {
+      summary: '精美的模拟/数字时钟小组件',
+      description: '# Ditto Clock Widget\n\n精美的模拟/数字时钟小组件。\n\n## 特性\n\n- **模拟时钟** — 经典表盘样式\n- **数字时钟** — 现代数字显示\n- **秒针动画** — 流畅的秒针转动\n- **多时区** — 支持多时区显示\n- **桌面常驻** — 小组件模式常驻桌面',
+      category: 'utility',
+      tags: ['时钟', '小组件', '工具', '桌面'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 4.1,
+    ratingCount: 2,
+    downloads: 89,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 6,
+    updatedAt: Date.now() - 86400000 * 1,
+  },
+  {
+    id: 'widget.ditto.quote',
+    manifest: {
+      id: 'widget.ditto.quote',
+      name: 'Ditto Quote Widget',
+      version: '1.0.0',
+      description: '每日名言小组件，激励每一天',
+      icon: '💬',
+      type: 'widget',
+      entry: 'frontend/index.html',
+      category: 'entertainment',
+      sandbox: 'trusted',
+      permissions: [],
+      window: { width: 360, height: 200, minWidth: 280, minHeight: 160, resizable: true, maximizable: false },
+    },
+    market: {
+      summary: '每日名言小组件，激励每一天',
+      description: '# Ditto Quote Widget\n\n每日名言小组件，激励每一天。\n\n## 特性\n\n- **每日更新** — 每天展示新的名言\n- **分类浏览** — 励志/哲理/诗词分类\n- **收藏功能** — 收藏喜欢的名言\n- **分享** — 一键分享名言\n- **桌面常驻** — 小组件模式常驻桌面',
+      category: 'entertainment',
+      tags: ['名言', '小组件', '激励', '桌面'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 3.9,
+    ratingCount: 1,
+    downloads: 45,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 9,
+    updatedAt: Date.now() - 86400000 * 5,
+  },
+  {
+    id: 'widget.ditto.system',
+    manifest: {
+      id: 'widget.ditto.system',
+      name: 'Ditto System Widget',
+      version: '1.0.0',
+      description: '系统状态监控小组件',
+      icon: '📊',
+      type: 'widget',
+      entry: 'frontend/index.html',
+      category: 'utility',
+      sandbox: 'trusted',
+      permissions: [],
+      window: { width: 320, height: 280, minWidth: 260, minHeight: 220, resizable: true, maximizable: false },
+    },
+    market: {
+      summary: '系统状态监控小组件',
+      description: '# Ditto System Widget\n\n系统状态监控小组件。\n\n## 特性\n\n- **CPU 监控** — 实时 CPU 使用率\n- **内存监控** — 内存占用情况\n- **网络状态** — 网络连接与速度\n- **磁盘空间** — 存储空间使用情况\n- **桌面常驻** — 小组件模式常驻桌面',
+      category: 'utility',
+      tags: ['系统', '监控', '小组件', '工具'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 4.0,
+    ratingCount: 1,
+    downloads: 56,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 11,
+    updatedAt: Date.now() - 86400000 * 4,
+  },
+  {
+    id: 'com.ditto.theme.ocean',
+    manifest: {
+      id: 'com.ditto.theme.ocean',
+      name: 'Ocean Theme',
+      version: '1.0.0',
+      description: '深邃海洋蓝色主题，宁静致远',
+      icon: '🌊',
+      type: 'theme',
+      entry: 'frontend/index.html',
+      category: 'theme',
+      sandbox: 'trusted',
+      permissions: [],
+      window: { width: 480, height: 400, minWidth: 360, minHeight: 300, resizable: true, maximizable: true },
+    },
+    market: {
+      summary: '深邃海洋蓝色主题，宁静致远',
+      description: '# Ocean Theme\n\n深邃海洋蓝色主题，宁静致远。\n\n## 特性\n\n- 海洋蓝色调配色方案\n- 水波纹过渡动画\n- 自定义蓝色强调色\n- 兼容所有内置应用\n\n包含完整的 design tokens 定义。',
+      category: 'theme',
+      tags: ['主题', '蓝色', '海洋', '外观'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 4.4,
+    ratingCount: 3,
+    downloads: 198,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 2,
+    updatedAt: Date.now() - 86400000 * 0.5,
+  },
+  {
+    id: 'com.ditto.theme.forest',
+    manifest: {
+      id: 'com.ditto.theme.forest',
+      name: 'Forest Theme',
+      version: '1.0.0',
+      description: '自然森林绿色主题，清新舒适',
+      icon: '🌲',
+      type: 'theme',
+      entry: 'frontend/index.html',
+      category: 'forest',
+      sandbox: 'trusted',
+      permissions: [],
+      window: { width: 480, height: 400, minWidth: 360, minHeight: 300, resizable: true, maximizable: true },
+    },
+    market: {
+      summary: '自然森林绿色主题，清新舒适',
+      description: '# Forest Theme\n\n自然森林绿色主题，清新舒适。\n\n## 特性\n\n- 森林绿色调配色方案\n- 自然过渡动画\n- 自定义绿色强调色\n- 兼容所有内置应用\n\n包含完整的 design tokens 定义。',
+      category: 'forest',
+      tags: ['主题', '绿色', '森林', '自然'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 3.8,
+    ratingCount: 1,
+    downloads: 42,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 1,
+    updatedAt: Date.now() - 86400000 * 0.3,
+  },
+  {
+    id: 'com.ditto.theme.nord',
+    manifest: {
+      id: 'com.ditto.theme.nord',
+      name: 'Nord Theme',
+      version: '1.0.0',
+      description: '北欧极光主题，冷峻优雅',
+      icon: '❄️',
+      type: 'theme',
+      entry: 'frontend/index.html',
+      category: 'theme',
+      sandbox: 'trusted',
+      permissions: [],
+      window: { width: 480, height: 400, minWidth: 360, minHeight: 300, resizable: true, maximizable: true },
+    },
+    market: {
+      summary: '北欧极光主题，冷峻优雅',
+      description: '# Nord Theme\n\n北欧极光主题，冷峻优雅。\n\n## 特性\n\n- 北极色调配色方案\n- 极光渐变动画效果\n- 自定义冷色强调色\n- 兼容所有内置应用\n\n包含完整的 design tokens 定义。',
+      category: 'theme',
+      tags: ['主题', '北欧', '极光', '冷色'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 4.7,
+    ratingCount: 4,
+    downloads: 265,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 1.5,
+    updatedAt: Date.now() - 86400000 * 0.2,
+  },
+  {
+    id: 'com.ditto.plugin.clipboard',
+    manifest: {
+      id: 'com.ditto.plugin.clipboard',
+      name: 'Clipboard Manager',
+      version: '1.0.0',
+      description: '剪贴板历史管理插件',
+      icon: '📋',
+      type: 'plugin',
+      entry: 'frontend/index.html',
+      category: 'utility',
+      sandbox: 'trusted',
+      permissions: ['clipboard.read', 'clipboard.write'],
+      window: { width: 400, height: 500, minWidth: 300, minHeight: 400, resizable: true, maximizable: true },
+    },
+    market: {
+      summary: '剪贴板历史管理插件',
+      description: '# Clipboard Manager\n\n剪贴板历史管理插件。\n\n## 特性\n\n- **历史记录** — 自动记录剪贴板历史\n- **快速搜索** — 全文搜索历史记录\n- **置顶固定** — 常用内容置顶固定\n- **分类管理** — 文本/链接/图片分类\n- **一键粘贴** — 快速选择粘贴内容',
+      category: 'utility',
+      tags: ['剪贴板', '插件', '工具', '效率'],
+      screenshots: [],
+      changelog: '',
+      downloadUrl: '',
+      publisher: 'Ditto Team',
+    },
+    rating: 4.3,
+    ratingCount: 3,
+    downloads: 134,
+    verified: true,
+    publishedAt: Date.now() - 86400000 * 3,
+    updatedAt: Date.now() - 86400000 * 0.5,
   },
 ];
 
@@ -248,33 +581,70 @@ const DEMO_REVIEWS: Record<string, MarketReview[]> = {
     { userId: 'noah', rating: 5, comment: '过渡动画很丝滑。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 0.5).toISOString() },
     { userId: 'olivia', rating: 4, comment: '和所有内置应用都兼容，赞。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 0.2).toISOString() },
   ],
-  'com.ditto.canvas': [
-    { userId: 'frank', rating: 5, comment: '画笔效果很流畅，适合快速草图！', version: '0.1.0', createdAt: new Date(Date.now() - 86400000 * 7).toISOString() },
-    { userId: 'grace', rating: 4, comment: '功能丰富，期待更多笔刷。', version: '0.1.0', createdAt: new Date(Date.now() - 86400000 * 4).toISOString() },
+  'com.ditto.timer': [
+    { userId: 'peter', rating: 5, comment: '番茄钟太好用了，专注效率明显提升！', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
+    { userId: 'quinn', rating: 4, comment: '白噪音功能很赞，希望能加更多音效。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 1).toISOString() },
   ],
-  'com.ditto.weather': [
-    { userId: 'henry', rating: 4, comment: '天气数据准确，界面美观。', version: '0.1.0', createdAt: new Date(Date.now() - 86400000 * 1).toISOString() },
+  'com.ditto.draw': [
+    { userId: 'rachel', rating: 4, comment: '画笔效果很流畅，适合快速草图！', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 5).toISOString() },
+    { userId: 'sam', rating: 5, comment: '图层系统很实用，期待更多笔刷。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 3).toISOString() },
+  ],
+  'com.ditto.todo': [
+    { userId: 'tina', rating: 5, comment: '待办管理终于有了，分类功能很棒！', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 3).toISOString() },
+    { userId: 'uma', rating: 5, comment: '优先级标记和拖拽排序太好用了。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
   ],
   'com.ditto.code': [
-    { userId: 'iris', rating: 5, comment: '语法高亮很棒，启动超快！', version: '0.1.0', createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
-    { userId: 'jack', rating: 5, comment: '终于可以在 WebOS 里写代码了。', version: '0.1.0', createdAt: new Date(Date.now() - 86400000 * 3).toISOString() },
+    { userId: 'iris', rating: 5, comment: '语法高亮很棒，启动超快！', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
+    { userId: 'jack', rating: 5, comment: '终于可以在 WebOS 里写代码了。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 3).toISOString() },
+  ],
+  'com.ditto.calendar': [
+    { userId: 'victor', rating: 4, comment: '日历视图很优雅，事件管理方便。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 6).toISOString() },
+    { userId: 'wendy', rating: 5, comment: '农历显示很贴心，国人必备！', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 4).toISOString() },
+  ],
+  'com.ditto.theme.ocean': [
+    { userId: 'xander', rating: 5, comment: '海洋蓝色调太美了，水波纹动画很舒服。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 1).toISOString() },
+    { userId: 'yara', rating: 4, comment: '配色很和谐，适合长时间使用。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 0.5).toISOString() },
+  ],
+  'com.ditto.theme.nord': [
+    { userId: 'zane', rating: 5, comment: '北欧风太有格调了，极光渐变绝美！', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 1).toISOString() },
+    { userId: 'ava', rating: 4, comment: '冷色调很独特，和深色主题完全不同的感觉。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 0.3).toISOString() },
+  ],
+  'com.ditto.plugin.clipboard': [
+    { userId: 'ben', rating: 4, comment: '剪贴板历史终于有了，效率提升明显！', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
+    { userId: 'cathy', rating: 5, comment: '搜索和置顶功能很实用，再也不怕丢失复制内容。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 0.5).toISOString() },
+  ],
+  'com.ditto.weather': [
+    { userId: 'henry', rating: 4, comment: '天气数据准确，界面美观。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 1).toISOString() },
+  ],
+  'widget.ditto.clock': [
+    { userId: 'diana', rating: 4, comment: '模拟时钟很精致，桌面常驻很方便。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 3).toISOString() },
+  ],
+  'widget.ditto.quote': [
+    { userId: 'ethan', rating: 4, comment: '每天一句名言，很有仪式感。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 4).toISOString() },
+  ],
+  'widget.ditto.system': [
+    { userId: 'fiona', rating: 4, comment: '系统监控很直观，桌面小组件很实用。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
+  ],
+  'com.ditto.theme.forest': [
+    { userId: 'george', rating: 4, comment: '绿色主题很清新，适合白天使用。', version: '1.0.0', createdAt: new Date(Date.now() - 86400000 * 0.5).toISOString() },
   ],
 };
 
 const DEMO_FEATURED: MarketFeatured = {
   banner: [
-    { appId: 'com.ditto.notes', image: '', title: 'Ditto Notes — 轻量笔记', subtitle: '简洁高效的 Markdown 笔记应用' },
-    { appId: 'com.ditto.calc', image: '', title: 'Ditto Calculator — 计算器', subtitle: '简洁美观的科学计算器' },
-    { appId: 'com.ditto.theme.midnight', image: '', title: 'Midnight Theme — 深色主题', subtitle: '优雅的午夜深色主题' },
+    { appId: 'com.ditto.timer', image: '', title: 'Ditto Timer — 番茄钟', subtitle: '番茄钟与倒计时器，专注效率提升' },
+    { appId: 'com.ditto.theme.nord', image: '', title: 'Nord Theme — 北欧极光', subtitle: '北欧极光主题，冷峻优雅' },
+    { appId: 'com.ditto.todo', image: '', title: 'Ditto Todo — 待办管理', subtitle: '高效待办事项管理，支持分类与优先级' },
   ],
-  editorsChoice: ['com.ditto.notes', 'com.ditto.calc', 'com.ditto.theme.midnight'],
-  newApps: ['com.ditto.calc', 'com.ditto.theme.midnight', 'com.ditto.weather'],
-  topRated: ['com.ditto.code', 'com.ditto.theme.midnight', 'com.ditto.notes'],
+  editorsChoice: ['com.ditto.timer', 'com.ditto.code', 'com.ditto.theme.nord', 'com.ditto.todo', 'com.ditto.draw'],
+  newApps: ['com.ditto.theme.ocean', 'com.ditto.theme.forest', 'com.ditto.theme.nord', 'com.ditto.plugin.clipboard', 'widget.ditto.clock'],
+  topRated: ['com.ditto.code', 'com.ditto.timer', 'com.ditto.theme.nord', 'com.ditto.todo', 'com.ditto.theme.midnight'],
 };
 
 export function createMarketRoutes(deps: MarketRouteDeps): Hono {
   const router = new Hono();
   const { cellManager, appsDir } = deps;
+  const testAppsDir = deps.testAppsDir;
   const owner = deps.owner ?? DEFAULT_OWNER;
   const repo = deps.repo ?? DEFAULT_REPO;
   const localDataDir = deps.localDataDir;
@@ -408,15 +778,28 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     } catch { return []; }
   }
 
+  function listTestAppDirs(): string[] {
+    if (!testAppsDir) return [];
+    try {
+      if (!fs.existsSync(testAppsDir)) return [];
+      return fs.readdirSync(testAppsDir, { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .map(d => d.name);
+    } catch { return []; }
+  }
+
   async function listAppDirs(): Promise<string[]> {
     const cacheKey = 'app-dirs';
     const cached = getCache<string[]>(cacheKey);
     if (cached) return cached;
 
     const localDirs = listLocalAppDirs();
-    if (localDirs.length > 0) {
-      setCache(cacheKey, localDirs, API_CACHE_TTL);
-      return localDirs;
+    const testDirs = listTestAppDirs();
+    const combinedLocal = [...new Set([...localDirs, ...testDirs])];
+    if (combinedLocal.length > 0) {
+      const allDirs = [...new Set([...combinedLocal, ...DEMO_APPS.map(a => a.id)])];
+      setCache(cacheKey, allDirs, API_CACHE_TTL);
+      return allDirs;
     }
 
     const ghAvailable = await checkGitHubAvailable();
@@ -428,7 +811,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
 
     try {
       const data = await fetchGitHub<{ path: string; type: string }[]>(
-        `/repos/${owner}/${repo}/contents/apps`
+        `/repos/${owner}/${repo}/contents/test-apps`
       );
       const dirs = data.filter(item => item.type === 'dir').map(item => item.path.split('/').pop()!);
       const allDirs = [...new Set([...dirs, ...DEMO_APPS.map(a => a.id)])];
@@ -447,10 +830,21 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     const cached = getCache<AppManifest & { market?: MarketMeta }>(cacheKey);
     if (cached) return cached;
 
-    const localManifest = readLocalJSON<AppManifest & { market?: MarketMeta }>(`apps/${appId}/manifest.json`);
+    const localManifest = readLocalJSON<AppManifest & { market?: MarketMeta }>(`test-apps/${appId}/manifest.json`);
     if (localManifest) {
       setCache(cacheKey, localManifest, API_CACHE_TTL);
       return localManifest;
+    }
+
+    if (testAppsDir) {
+      const testManifestPath = path.join(testAppsDir, appId, 'manifest.json');
+      try {
+        if (fs.existsSync(testManifestPath)) {
+          const testManifest = JSON.parse(fs.readFileSync(testManifestPath, 'utf8')) as AppManifest & { market?: MarketMeta };
+          setCache(cacheKey, testManifest, API_CACHE_TTL);
+          return testManifest;
+        }
+      } catch {}
     }
 
     const demoApp = DEMO_APPS.find(a => a.id === appId);
@@ -463,7 +857,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     const ghAvailable = await checkGitHubAvailable();
     if (ghAvailable) {
       const manifest = await fetchGitHubJSON<AppManifest & { market?: MarketMeta }>(
-        `apps/${appId}/manifest.json`
+        `test-apps/${appId}/manifest.json`
       );
       setCache(cacheKey, manifest, API_CACHE_TTL);
       return manifest;
@@ -647,7 +1041,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     const name = c.req.param('name');
 
     if (localDataDir) {
-      const localPath = path.join(localDataDir, 'apps', appId, 'screenshots', name);
+      const localPath = path.join(localDataDir, 'test-apps', appId, 'screenshots', name);
       if (fs.existsSync(localPath)) {
         const ext = path.extname(name).toLowerCase();
         const mimeTypes: Record<string, string> = {
@@ -660,7 +1054,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
       }
     }
 
-    const url = `${GITHUB_RAW}/${owner}/${repo}/${DEFAULT_BRANCH}/apps/${appId}/screenshots/${name}`;
+    const url = `${GITHUB_RAW}/${owner}/${repo}/${DEFAULT_BRANCH}/test-apps/${appId}/screenshots/${name}`;
     try {
       const response = await fetch(url, { headers: githubHeaders(), signal: AbortSignal.timeout(10000) });
       if (!response.ok) return c.json({ error: 'Screenshot not found' }, 404);
@@ -681,14 +1075,14 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
   router.get('/apps/:appId/changelog', async (c) => {
     const appId = c.req.param('appId');
 
-    const localChangelog = readLocalText(`apps/${appId}/changelog.md`);
+    const localChangelog = readLocalText(`test-apps/${appId}/changelog.md`);
     if (localChangelog) {
       c.header('Content-Type', 'text/markdown');
       return c.body(localChangelog);
     }
 
     try {
-      const changelog = await fetchGitHubRaw(`apps/${appId}/changelog.md`);
+      const changelog = await fetchGitHubRaw(`test-apps/${appId}/changelog.md`);
       c.header('Content-Type', 'text/markdown');
       return c.body(changelog);
     } catch {
