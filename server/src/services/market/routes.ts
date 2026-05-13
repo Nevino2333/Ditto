@@ -1139,6 +1139,47 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     try {
       const manifest = await getAppManifest(appId);
       let downloadUrl = manifest.market?.downloadUrl;
+
+      if (!downloadUrl && testAppsDir) {
+        const srcDir = path.join(testAppsDir, appId);
+        if (fs.existsSync(srcDir) && fs.statSync(srcDir).isDirectory()) {
+          const destDir = path.join(appsDir, appId.replace(/\./g, '_'));
+          fs.mkdirSync(destDir, { recursive: true });
+
+          function copyDirRecursive(src: string, dest: string) {
+            const entries = fs.readdirSync(src, { withFileTypes: true });
+            for (const entry of entries) {
+              const srcPath = path.join(src, entry.name);
+              const destPath = path.join(dest, entry.name);
+              if (entry.isDirectory()) {
+                fs.mkdirSync(destPath, { recursive: true });
+                copyDirRecursive(srcPath, destPath);
+              } else {
+                fs.copyFileSync(srcPath, destPath);
+              }
+            }
+          }
+
+          copyDirRecursive(srcDir, destDir);
+
+          const localManifestPath = path.join(destDir, 'manifest.json');
+          let installedManifest = manifest;
+          if (fs.existsSync(localManifestPath)) {
+            installedManifest = JSON.parse(fs.readFileSync(localManifestPath, 'utf8'));
+          }
+
+          cellManager.registerApp(installedManifest.id, installedManifest, path.join(destDir, 'backend'));
+
+          return c.json({
+            success: true,
+            id: installedManifest.id,
+            name: installedManifest.name,
+            version: installedManifest.version,
+            hasBackend: !!installedManifest.backend,
+          });
+        }
+      }
+
       if (!downloadUrl) {
         return c.json({ error: 'No download URL available for this app' }, 400);
       }
