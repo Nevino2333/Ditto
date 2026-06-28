@@ -56,6 +56,13 @@ export class ShadowSandbox {
     return this.shadow;
   }
 
+  /** 暂停时隐藏 host（保留 state），恢复时显示。 */
+  setVisible(visible: boolean): void {
+    if (this.host) {
+      this.host.style.display = visible ? 'block' : 'none';
+    }
+  }
+
   destroy(): void {
     if (this.host) {
       this.host.remove();

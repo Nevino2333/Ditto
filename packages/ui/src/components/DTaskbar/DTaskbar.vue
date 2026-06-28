@@ -31,7 +31,7 @@ function onAppClick(app: AppManifest) {
 </script>
 
 <template>
-  <nav class="d-taskbar">
+  <nav class="d-taskbar" role="navigation" aria-label="任务栏">
     <div class="d-taskbar__start">
       <slot />
     </div>
@@ -47,6 +47,7 @@ function onAppClick(app: AppManifest) {
         }"
         @click="onAppClick(app)"
         :title="app.name"
+        :aria-label="`${app.name}${appStore.runningAppIds.includes(app.id) ? '（运行中）' : ''}`"
       >
         <span class="d-taskbar__app-icon">{{ app.icon || '📦' }}</span>
       </button>
@@ -75,6 +76,13 @@ function onAppClick(app: AppManifest) {
   box-shadow: var(--ditto-shadow-taskbar, 0 -1px 12px rgba(0,0,0,0.04));
   z-index: 9999;
   user-select: none;
+  /* 入场动画：从底部滑入 */
+  animation: d-taskbar-in 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes d-taskbar-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 .d-taskbar__start {

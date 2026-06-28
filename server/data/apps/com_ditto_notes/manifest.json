@@ -1,0 +1,25 @@
+{
+  "id": "com.ditto.notes",
+  "name": "Ditto Notes",
+  "version": "0.1.0",
+  "description": "轻量级 Markdown 笔记应用",
+  "icon": "📝",
+  "entry": "frontend/index.html",
+  "category": "productivity",
+  "sandbox": "trusted",
+  "permissions": ["storage"],
+  "type": "app",
+  "window": {
+    "width": 720,
+    "height": 540,
+    "minWidth": 480,
+    "minHeight": 360,
+    "resizable": true,
+    "maximizable": true
+  },
+  "backend": {
+    "entry": "backend/index.ts",
+    "type": "cell",
+    "healthCheck": "/health"
+  }
+}

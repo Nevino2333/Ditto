@@ -48,7 +48,8 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-ap
 .cursor-eraser{cursor:cell}
 .cursor-line,.cursor-rect,.cursor-circle{cursor:crosshair}
 .cursor-fill{cursor:pointer}
-</style>
+@media(max-width:768px){.toolbar{position:fixed;bottom:0;left:0;right:0;z-index:10;flex-wrap:wrap;gap:4px;padding:6px 8px;border-bottom:none;border-top:1px solid var(--border);justify-content:center}.toolbar-divider{display:none}.canvas-wrap{padding-bottom:52px}.tool-btn{width:38px;height:38px;min-height:44px;min-width:44px}.color-swatch{width:26px;height:26px}.slider-group input[type=range]{width:60px}.action-btn{min-height:44px}.status-bar{display:none}}
+  </style>
 </head>
 <body>
 <div class="toolbar">

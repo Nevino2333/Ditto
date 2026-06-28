@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import legacy from '@vitejs/plugin-legacy';
 import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'path';
+import flexGapPolyfill from './postcss-flex-gap-polyfill.mjs';
 
 export default defineConfig({
   plugins: [
@@ -65,6 +66,11 @@ export default defineConfig({
   build: {
     target: 'es2015',
     cssTarget: 'chrome78',
+  },
+  css: {
+    postcss: {
+      plugins: [flexGapPolyfill()],
+    },
   },
   server: {
     port: 3000,

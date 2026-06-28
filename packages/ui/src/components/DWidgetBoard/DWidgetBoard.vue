@@ -24,12 +24,13 @@ function onRemove(instanceId: string) {
 
 <template>
   <div class="d-widget-board">
-    <div
-      v-for="inst in instances"
-      :key="inst.id"
-      class="d-widget"
-      :style="getWidgetStyle(inst)"
-    >
+    <TransitionGroup name="d-widget">
+      <div
+        v-for="inst in instances"
+        :key="inst.id"
+        class="d-widget"
+        :style="getWidgetStyle(inst)"
+      >
       <div class="d-widget__body">
         <slot :instance="inst" :widgetId="inst.widgetId">
           <div class="d-widget__placeholder">
@@ -38,15 +39,19 @@ function onRemove(instanceId: string) {
           </div>
         </slot>
       </div>
-      <button class="d-widget__close" title="移除小组件" @click.stop="onRemove(inst.id)">×</button>
+      <button class="d-widget__close" title="移除小组件" aria-label="移除小组件" @click.stop="onRemove(inst.id)">×</button>
     </div>
+    </TransitionGroup>
   </div>
 </template>
 
 <style scoped>
 .d-widget-board {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
   z-index: 1;
 }
@@ -62,6 +67,23 @@ function onRemove(instanceId: string) {
   pointer-events: auto;
   border: 1px solid var(--ditto-color-border-subtle, rgba(255, 255, 255, 0.06));
   transition: box-shadow 150ms ease;
+}
+
+/* 入场/出场动画 */
+.d-widget-enter-active {
+  transition: opacity 200ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.d-widget-leave-active {
+  transition: opacity 160ms ease, transform 160ms ease;
+  position: absolute;
+}
+.d-widget-enter-from {
+  opacity: 0;
+  transform: scale(0.92);
+}
+.d-widget-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
 }
 
 .d-widget:hover {

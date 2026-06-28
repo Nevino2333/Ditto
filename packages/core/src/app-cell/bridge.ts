@@ -80,6 +80,32 @@ export class CellBridge {
     }
   }
 
+  /** 通知服务端 hibernate（暂停后端 Cell，释放资源，保留 state）。 */
+  async notifyHibernate(appId: string): Promise<void> {
+    const url = `${this.serverOrigin}/api/cell/${encodeURIComponent(appId)}/hibernate`;
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-User-Id': this.userId },
+      });
+    } catch (e) {
+      console.warn(`[Ditto CellBridge] hibernate ${appId} failed:`, e);
+    }
+  }
+
+  /** 通知服务端 wake（从 hibernate 恢复后端 Cell）。 */
+  async notifyWake(appId: string): Promise<void> {
+    const url = `${this.serverOrigin}/api/cell/${encodeURIComponent(appId)}/wake`;
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-User-Id': this.userId },
+      });
+    } catch (e) {
+      console.warn(`[Ditto CellBridge] wake ${appId} failed:`, e);
+    }
+  }
+
   disconnect(): void {
     if (this.ws) {
       this.ws.close();

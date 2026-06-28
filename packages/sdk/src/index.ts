@@ -8,6 +8,7 @@ import { useDittoUI } from './ui-api';
 import { useDittoWidget } from './widget-api';
 import { useDittoApp } from './app-api';
 import { useDittoCell } from './cell-api';
+import { useDittoTheme } from './theme-api';
 
 export const DittoIPCKey: InjectionKey<ReturnType<typeof useDittoIPC>> = Symbol('ditto-ipc');
 export const DittoWindowKey: InjectionKey<ReturnType<typeof useDittoWindow>> = Symbol('ditto-window');
@@ -18,6 +19,7 @@ export const DittoUIKey: InjectionKey<ReturnType<typeof useDittoUI>> = Symbol('d
 export const DittoWidgetKey: InjectionKey<ReturnType<typeof useDittoWidget>> = Symbol('ditto-widget');
 export const DittoAppKey: InjectionKey<ReturnType<typeof useDittoApp>> = Symbol('ditto-app');
 export const DittoCellKey: InjectionKey<ReturnType<typeof useDittoCell>> = Symbol('ditto-cell');
+export const DittoThemeKey: InjectionKey<ReturnType<typeof useDittoTheme>> = Symbol('ditto-theme');
 
 export const DittoSDK = {
   install(app: App) {
@@ -47,6 +49,9 @@ export const DittoSDK = {
 
     const cellApi = useDittoCell();
     app.provide(DittoCellKey, cellApi);
+
+    const themeApi = useDittoTheme();
+    app.provide(DittoThemeKey, themeApi);
   },
 };
 
@@ -59,3 +64,5 @@ export { useDittoUI } from './ui-api';
 export { useDittoWidget } from './widget-api';
 export { useDittoApp } from './app-api';
 export { useDittoCell } from './cell-api';
+export { useDittoTheme } from './theme-api';
+export type { ThemeInfo, AnimationPreset } from './theme-api';

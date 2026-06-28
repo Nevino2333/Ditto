@@ -35,7 +35,8 @@ function onOverlayClick() {
 
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="d-start-menu-overlay" @click="onOverlayClick">
+    <Transition name="d-start-menu">
+      <div v-if="visible" class="d-start-menu-overlay" @click="onOverlayClick" role="dialog" aria-label="开始菜单">
       <div class="d-start-menu" @click.stop>
         <div class="d-start-menu__search">
           <input
@@ -43,6 +44,7 @@ function onOverlayClick() {
             type="text"
             placeholder="搜索应用..."
             class="d-start-menu__search-input"
+            aria-label="搜索应用"
             autofocus
           />
         </div>
@@ -51,6 +53,7 @@ function onOverlayClick() {
             v-for="app in filteredApps"
             :key="app.id"
             class="d-start-menu__app"
+            :aria-label="`启动 ${app.name}`"
             @click="onAppClick(app.id)"
           >
             <span class="d-start-menu__app-icon">{{ app.icon || '📦' }}</span>
@@ -65,13 +68,17 @@ function onOverlayClick() {
         </div>
       </div>
     </div>
+    </Transition>
   </Teleport>
 </template>
 
 <style scoped>
 .d-start-menu-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 9000;
   background: rgba(0, 0, 0, 0.2);
   display: flex;
@@ -89,6 +96,26 @@ function onOverlayClick() {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* 入场/出场动画：遮罩淡入 + 面板上滑 */
+.d-start-menu-enter-active {
+  transition: opacity 200ms ease;
+}
+.d-start-menu-leave-active {
+  transition: opacity 160ms ease;
+}
+.d-start-menu-enter-from,
+.d-start-menu-leave-to {
+  opacity: 0;
+}
+.d-start-menu-enter-active .d-start-menu,
+.d-start-menu-leave-active .d-start-menu {
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.d-start-menu-enter-from .d-start-menu,
+.d-start-menu-leave-to .d-start-menu {
+  transform: translateY(100%);
 }
 
 .d-start-menu__search {

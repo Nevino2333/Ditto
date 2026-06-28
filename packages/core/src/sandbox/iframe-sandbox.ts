@@ -67,6 +67,13 @@ export class IFrameSandbox {
     return () => this.messageHandlers.delete(handler);
   }
 
+  /** 暂停时隐藏 iframe（保留 state），恢复时显示。 */
+  setVisible(visible: boolean): void {
+    if (this.iframe) {
+      this.iframe.style.display = visible ? 'block' : 'none';
+    }
+  }
+
   destroy(): void {
     window.removeEventListener('message', this.handleMessage);
     if (this.iframe) {

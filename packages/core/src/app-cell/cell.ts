@@ -1,5 +1,4 @@
 import type { AppManifest, CellRuntimeConfig, ClientCellStatus, Capability } from '@ditto/shared';
-import { DittoError } from '@ditto/shared';
 import { EventEmitter } from '../event/emitter';
 import type { CellSandbox } from '../sandbox';
 import { createSandbox } from '../sandbox';
@@ -88,18 +87,43 @@ export class ClientCell {
   }
 
   async pause(): Promise<void> {
-    // 阶段 1 留接口，阶段 2 实现
-    throw DittoError.fromUnknown(
-      new Error('ClientCell.pause() not implemented (stage 2)'),
-      'UNKNOWN'
-    );
+    if (this._status === 'paused') return;
+    assertTransition(this._status, 'paused');
+
+    try {
+      // 通知服务端 hibernate（dit 类型且有后端才调用）
+      if (this.config.type === 'dit' && this.config.backendCell && this.deps.bridge) {
+        await this.deps.bridge.notifyHibernate(this.appId);
+      }
+      // 隐藏沙盒 DOM（保留 state，释放视觉资源）
+      this._sandbox?.setVisible(false);
+      this._status = 'paused';
+      this.emitter.emit('cell:paused', this);
+    } catch (e) {
+      this._error = e instanceof Error ? e : new Error(String(e));
+      this.emitter.emit('cell:error', { appId: this.appId, error: this._error });
+      throw e;
+    }
   }
 
   async resume(): Promise<void> {
-    throw DittoError.fromUnknown(
-      new Error('ClientCell.resume() not implemented (stage 2)'),
-      'UNKNOWN'
-    );
+    if (this._status === 'active') return;
+    assertTransition(this._status, 'active');
+
+    try {
+      // 通知服务端 wake（dit 类型且有后端才调用）
+      if (this.config.type === 'dit' && this.config.backendCell && this.deps.bridge) {
+        await this.deps.bridge.notifyWake(this.appId);
+      }
+      // 恢复沙盒显示
+      this._sandbox?.setVisible(true);
+      this._status = 'active';
+      this.emitter.emit('cell:resumed', this);
+    } catch (e) {
+      this._error = e instanceof Error ? e : new Error(String(e));
+      this.emitter.emit('cell:error', { appId: this.appId, error: this._error });
+      throw e;
+    }
   }
 
   async unload(): Promise<void> {
@@ -132,6 +156,14 @@ export class ClientCell {
 
   onStopped(handler: () => void): () => void {
     return this.emitter.on('cell:stopped', handler as any);
+  }
+
+  onPaused(handler: () => void): () => void {
+    return this.emitter.on('cell:paused', handler as any);
+  }
+
+  onResumed(handler: () => void): () => void {
+    return this.emitter.on('cell:resumed', handler as any);
   }
 }
 

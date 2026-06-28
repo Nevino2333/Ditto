@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Midnight Theme</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 24px; }
+
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    h1 span { color: #e94560; }
+    .subtitle { color: #8b949e; margin-bottom: 24px; font-size: 14px; }
+
+    .preview-box { background: #16213e; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .preview-box h3 { font-size: 14px; color: #58a6ff; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+    .color-swatch { border-radius: 8px; padding: 12px 8px; text-align: center; font-size: 11px; }
+    .color-swatch .name { font-weight: 600; margin-bottom: 4px; }
+    .color-swatch .value { opacity: 0.7; }
+
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .demo-btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: transform 0.1s; }
+    .demo-btn:active { transform: scale(0.95); }
+
+    .apply-btn { background: #e94560; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: background 0.15s; }
+    .apply-btn:hover { background: #ff6b81; }
+
+    .status { margin-top: 12px; font-size: 13px; color: #3fb950; opacity: 0; transition: opacity 0.3s; }
+    .status.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>🌙 <span>Midnight</span> Theme</h1>
+  <p class="subtitle">优雅的午夜深色主题 — 护眼配色，平滑动画</p>
+
+  <div class="preview-box">
+    <h3>调色板</h3>
+    <div class="color-grid">
+      <div class="color-swatch" style="background:#e94560;color:white"><div class="name">Primary</div><div class="value">#e94560</div></div>
+      <div class="color-swatch" style="background:#58a6ff;color:white"><div class="name">Accent</div><div class="value">#58a6ff</div></div>
+      <div class="color-swatch" style="background:#1a1a2e;color:#e0e0e0;border:1px solid #30363d"><div class="name">Background</div><div class="value">#1a1a2e</div></div>
+      <div class="color-swatch" style="background:#16213e;color:#e0e0e0;border:1px solid #30363d"><div class="name">Surface</div><div class="value">#16213e</div></div>
+      <div class="color-swatch" style="background:#3fb950;color:white"><div class="name">Success</div><div class="value">#3fb950</div></div>
+      <div class="color-swatch" style="background:#d29922;color:white"><div class="name">Warning</div><div class="value">#d29922</div></div>
+      <div class="color-swatch" style="background:#f85149;color:white"><div class="name">Error</div><div class="value">#f85149</div></div>
+      <div class="color-swatch" style="background:#bc8cff;color:white"><div class="name">Purple</div><div class="value">#bc8cff</div></div>
+    </div>
+  </div>
+
+  <div class="preview-box">
+    <h3>按钮样式</h3>
+    <div class="btn-row">
+      <button class="demo-btn" style="background:#e94560;color:white">Primary</button>
+      <button class="demo-btn" style="background:#58a6ff;color:white">Accent</button>
+      <button class="demo-btn" style="background:#3fb950;color:white">Success</button>
+      <button class="demo-btn" style="background:#21262d;color:#c9d1d9;border:1px solid #30363d">Ghost</button>
+    </div>
+  </div>
+
+  <button class="apply-btn" onclick="applyTheme()">应用主题</button>
+  <div class="status" id="status">✅ 主题已应用</div>
+
+  <script>
+    function applyTheme() {
+      const el = document.getElementById('status');
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>

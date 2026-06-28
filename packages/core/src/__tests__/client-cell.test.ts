@@ -52,12 +52,48 @@ describe('ClientCell', () => {
     document.body.removeChild(container);
   });
 
-  it('pause/resume 阶段 1 抛 NotSupported', async () => {
+  it('pause/resume：active → paused → active', async () => {
     const container = makeContainer();
     const config: CellRuntimeConfig = { type: 'native', componentLoader: async () => ({}) };
     const cell = new ClientCell(manifest, config, { container });
     await cell.activate();
-    await expect(cell.pause()).rejects.toThrow(/stage 2/i);
+    expect(cell.status).toBe('active');
+
+    const pausedFn = vi.fn();
+    const resumedFn = vi.fn();
+    cell.onPaused(pausedFn);
+    cell.onResumed(resumedFn);
+
+    await cell.pause();
+    expect(cell.status).toBe('paused');
+    expect(pausedFn).toHaveBeenCalledTimes(1);
+
+    await cell.resume();
+    expect(cell.status).toBe('active');
+    expect(resumedFn).toHaveBeenCalledTimes(1);
+
+    await cell.unload();
+    document.body.removeChild(container);
+  });
+
+  it('pause 幂等：重复 pause 不抛错', async () => {
+    const container = makeContainer();
+    const config: CellRuntimeConfig = { type: 'native', componentLoader: async () => ({}) };
+    const cell = new ClientCell(manifest, config, { container });
+    await cell.activate();
+    await cell.pause();
+    await cell.pause(); // 已 paused，不抛错
+    expect(cell.status).toBe('paused');
+    await cell.unload();
+    document.body.removeChild(container);
+  });
+
+  it('非法状态转换：loading → paused 抛错', async () => {
+    const container = makeContainer();
+    const config: CellRuntimeConfig = { type: 'native', componentLoader: async () => ({}) };
+    const cell = new ClientCell(manifest, config, { container });
+    expect(cell.status).toBe('loading');
+    await expect(cell.pause()).rejects.toThrow(/Invalid cell state transition/);
     document.body.removeChild(container);
   });
 

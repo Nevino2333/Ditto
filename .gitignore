@@ -6,3 +6,6 @@ dist/
 .turbo/
 .superpowers/
 .trae/
+
+# 商店仓库（独立仓库，不纳入主项目版本控制）
+Ditto_Market/

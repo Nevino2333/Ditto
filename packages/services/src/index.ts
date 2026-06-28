@@ -9,4 +9,5 @@ export { useWidgetStore } from './widget';
 export { useIslandStore } from './island';
 export { useNotificationStore } from './notification-center';
 export type { NotificationEntry } from './notification-center';
+export { registerKernelServices } from './register';
 export { useDialogStore } from './dialog';

@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, defineAsyncComponent, onMounted, onUnmounted } from 'vue';
 import { DDesktop, DTaskbar, DWindow, DStartMenu, DContextMenu, DNotification, DDialog, DWidgetBoard } from '@ditto/ui';
 import { useWindowStore, useAppStore, useNotificationStore, useDialogStore, useWidgetStore } from '@ditto/services';
-import { getThemeEngine } from '@ditto/theme';
+import { getThemeEngine, adaptExternalTokens, applyTypographyTokens } from '@ditto/theme';
+import type { ExternalThemeTokens } from '@ditto/theme';
 import type { AppManifest } from '@ditto/shared';
-import FileManager from './apps/FileManager.vue';
-import Settings from './apps/Settings.vue';
-import About from './apps/About.vue';
-import Market from './apps/Market.vue';
+
+// 懒加载内置应用：减小首屏 bundle，按需加载
+const AppLoading = { template: '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:14px;">加载中…</div>' };
+const FileManager = defineAsyncComponent({ loader: () => import('./apps/FileManager.vue'), loadingComponent: AppLoading });
+const Settings = defineAsyncComponent({ loader: () => import('./apps/Settings.vue'), loadingComponent: AppLoading });
+const About = defineAsyncComponent({ loader: () => import('./apps/About.vue'), loadingComponent: AppLoading });
+const Market = defineAsyncComponent({ loader: () => import('./apps/Market.vue'), loadingComponent: AppLoading });
 
 const windowStore = useWindowStore();
 const appStore = useAppStore();
@@ -23,6 +27,15 @@ const appIframes = ref<Record<string, string>>({});
 const widgetIframes = ref<Record<string, string>>({});
 
 let clockTimer: ReturnType<typeof setInterval>;
+let unsubscribeTheme: (() => void) | null = null;
+
+/** 广播消息到所有应用 iframe（让第三方应用收到宿主推送的事件） */
+function broadcastToIframes(channel: string, payload: unknown) {
+  const message = { type: 'ditto-ipc', channel, payload, source: 'host', timestamp: Date.now() };
+  document.querySelectorAll('iframe').forEach((frame) => {
+    try { frame.contentWindow?.postMessage(message, '*'); } catch { /* 跨域被阻止，忽略 */ }
+  });
+}
 
 function updateClock() {
   clock.value = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
@@ -33,6 +46,13 @@ function onIPCMessage(event: MessageEvent) {
 
   const channel = event.data.channel;
   const payload = event.data.payload;
+  const requestId = payload?.requestId;
+
+  function respond(data: unknown, error?: string) {
+    if (!requestId) return;
+    const res = { type: 'ditto-ipc', channel: `${channel}:response`, payload: { requestId, data, error }, source: 'host', timestamp: Date.now() };
+    (event.source as Window | null)?.postMessage(res, '*');
+  }
 
   if (channel === 'ui:notify' && payload) {
     notificationStore.pushNotification({
@@ -54,17 +74,63 @@ function onIPCMessage(event: MessageEvent) {
     addWidgetToDesktop(payload.appId);
     return;
   }
+
+  // 主题查询
+  if (channel === 'theme:getCurrent') {
+    const t = themeEngine.getCurrentTheme();
+    respond({ id: t.id, name: t.name, colorScheme: t.colorScheme });
+    return;
+  }
+  if (channel === 'theme:list') {
+    respond(themeEngine.getAvailableThemes().map((t) => ({ id: t.id, name: t.name, colorScheme: t.colorScheme })));
+    return;
+  }
+  if (channel === 'theme:getToken') {
+    respond({ value: themeEngine.getTokenValue(payload?.path ?? '') });
+    return;
+  }
+
+  // 主题变更
+  if (channel === 'theme:setTheme' && payload?.themeId) {
+    themeEngine.setTheme(payload.themeId);
+    return;
+  }
+  if (channel === 'theme:toggleScheme') {
+    themeEngine.toggleColorScheme();
+    return;
+  }
+  if (channel === 'theme:setOverride' && payload?.path) {
+    themeEngine.setTokenOverride(payload.path, payload.value ?? '');
+    return;
+  }
+  if (channel === 'theme:setComponentOverride' && payload?.componentName) {
+    themeEngine.setComponentOverride(payload.componentName, payload.tokens ?? {});
+    return;
+  }
+  if (channel === 'theme:removeComponentOverride' && payload?.componentName) {
+    themeEngine.removeComponentOverride(payload.componentName);
+    return;
+  }
+  if (channel === 'theme:setAnimationPreset' && payload?.preset) {
+    themeEngine.setAnimationPreset(payload.preset);
+    return;
+  }
 }
 
 onMounted(() => {
   updateClock();
   clockTimer = setInterval(updateClock, 10000);
   window.addEventListener('message', onIPCMessage);
+  // 主题变更时广播给所有 iframe（让第三方应用 SDK useDittoTheme.subscribe 生效）
+  unsubscribeTheme = themeEngine.subscribe((theme) => {
+    broadcastToIframes('theme:changed', { id: theme.id, name: theme.name, colorScheme: theme.colorScheme });
+  });
 });
 
 onUnmounted(() => {
   clearInterval(clockTimer);
   window.removeEventListener('message', onIPCMessage);
+  if (unsubscribeTheme) unsubscribeTheme();
 });
 
 const builtinAppComponents: Record<string, any> = {
@@ -122,12 +188,20 @@ function applyThemeFromManifest(appId: string) {
     .then((tokens) => {
       const manifest = appStore.apps.find((a) => a.id === appId);
       const themeName = manifest?.name ?? appId;
-      const colorScheme = tokens.color?.surface?.base
-        ? isColorDark(tokens.color.surface.base) ? 'dark' : 'light'
-        : 'dark';
 
-      themeEngine.createTheme(appId, themeName, colorScheme, tokens);
+      // 通过适配器将第三方 token schema 转换为 ThemeTokens
+      const adapted = adaptExternalTokens(tokens as ExternalThemeTokens);
+      const baseColor = adapted.color?.surface?.base ?? adapted.color?.primary?.['500'] ?? '#1a1a2e';
+      const colorScheme = isColorDark(baseColor) ? 'dark' : 'light';
+
+      themeEngine.createTheme(appId, themeName, colorScheme, adapted);
       themeEngine.setTheme(appId);
+
+      // 补充 typography token（ThemeTokens 无 typography 字段，直接写 CSS 变量）
+      if (tokens.typography) {
+        applyTypographyTokens(tokens.typography);
+      }
+
       notificationStore.pushNotification({
         title: '主题已应用',
         body: `已切换到「${themeName}」主题`,
@@ -299,11 +373,12 @@ function onDialogCancel() {
     <DWidgetBoard>
       <template #default="{ instance }">
         <iframe
-          :src="getWidgetIframeUrl(instance.widgetId)"
-          class="widget-iframe"
-          sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-modals"
-          allow="clipboard-read; clipboard-write"
-        ></iframe>
+        :src="getWidgetIframeUrl(instance.widgetId)"
+        class="widget-iframe"
+        sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-modals"
+        allow="clipboard-read; clipboard-write"
+        loading="lazy"
+      ></iframe>
       </template>
     </DWidgetBoard>
 
@@ -323,6 +398,7 @@ function onDialogCancel() {
         class="app-iframe"
         sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-modals"
         allow="clipboard-read; clipboard-write"
+        loading="lazy"
       ></iframe>
     </DWindow>
   </DDesktop>
@@ -396,6 +472,9 @@ html, body {
   border: none;
   display: block;
   background: white;
+  /* 渲染性能：屏幕外内容跳过渲染（Chrome 85+，旧版本自动降级） */
+  content-visibility: auto;
+  contain-intrinsic-size: 100% 100%;
 }
 
 .widget-iframe {
@@ -404,6 +483,8 @@ html, body {
   border: none;
   display: block;
   background: transparent;
+  content-visibility: auto;
+  contain-intrinsic-size: 100% 100%;
 }
 
 .start-btn {
@@ -474,6 +555,34 @@ html, body {
 
   .tray-clock {
     font-size: 13px;
+  }
+}
+
+/* 平板适配（768-1024px）：折中布局 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .start-btn {
+    width: 42px;
+    height: 42px;
+  }
+
+  .tray-clock {
+    font-size: 11px;
+  }
+}
+
+/* 无障碍：尊重用户减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .app-iframe, .widget-iframe {
+    outline: 2px solid currentColor;
   }
 }
 </style>

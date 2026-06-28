@@ -64,10 +64,13 @@ function onContextMenu(e: MouseEvent) {
       :class="{ 'd-desktop__icons--grid': columns > 0 }"
     >
       <div
-        v-for="app in desktopApps"
+        v-for="(app, i) in desktopApps"
         :key="app.id"
         class="d-desktop__icon"
-        :style="{ width: `${iconSize}px`, height: `${iconSize}px` }"
+        :style="{ width: `${iconSize}px`, height: `${iconSize}px`, animationDelay: `${i * 40}ms` }"
+        :role="app.id ? 'button' : undefined"
+        :tabindex="app.id ? 0 : undefined"
+        :aria-label="`打开 ${app.name}`"
         @dblclick.stop="onAppDblClick(app)"
         @click.stop="onAppClick(app)"
       >
@@ -84,7 +87,10 @@ function onContextMenu(e: MouseEvent) {
 <style scoped>
 .d-desktop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   bottom: var(--ditto-space-taskbar-height, 52px);
   background: var(--ditto-color-surface-base, #f8fafc);
   overflow: hidden;
@@ -114,8 +120,15 @@ function onContextMenu(e: MouseEvent) {
   justify-content: center;
   border-radius: var(--ditto-radius-card, 8px);
   cursor: pointer;
-  transition: background var(--ditto-motion-duration-fast, 120ms);
+  transition: background var(--ditto-motion-duration-fast, 120ms), transform 120ms;
   gap: 4px;
+  /* 入场动画：逐个淡入上浮 */
+  animation: d-desktop-icon-in 200ms ease both;
+}
+
+@keyframes d-desktop-icon-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .d-desktop__icon:hover {
