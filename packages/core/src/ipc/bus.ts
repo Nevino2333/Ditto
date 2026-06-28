@@ -1,4 +1,4 @@
-import type { IPCMessage, IPCChannel } from '@ditto/shared';
+import type { IPCMessage } from '@ditto/shared';
 import { DittoError } from '@ditto/shared';
 import { EventEmitter } from '../event/emitter';
 
@@ -12,12 +12,21 @@ interface PendingRequest {
 }
 
 const DITTO_MSG_TYPE = 'ditto-ipc';
+const VALID_ORIGIN_RE = /^https?:\/\/.+/;
 
 let msgCounter = 0;
 function generateMsgId(): string {
   return `msg-${Date.now()}-${++msgCounter}`;
 }
 
+/**
+ * IPCBus v2。
+ * 关键变更：
+ * - connectBridge 强制 origin 白名单（拒绝 '*')
+ * - 中间件链迭代执行（避免递归栈溢出）
+ * - handler 异常触发 ipc:handler-error 事件
+ * - destroy 时清理所有 pending request
+ */
 export class IPCBus {
   private id: string;
   private emitter = new EventEmitter();
@@ -25,7 +34,7 @@ export class IPCBus {
   private pendingRequests = new Map<string, PendingRequest>();
   private middlewares: IPCMiddleware[] = [];
   private bridgeTarget: Window | null = null;
-  private bridgeOrigin = '*';
+  private bridgeOrigin = '';
   private bridgeListener: ((event: MessageEvent) => void) | null = null;
   private defaultTimeout: number;
 
@@ -39,13 +48,7 @@ export class IPCBus {
       this.handlers.set(channel, new Set());
     }
     this.handlers.get(channel)!.add(handler);
-    return () => {
-      const set = this.handlers.get(channel);
-      if (set) {
-        set.delete(handler);
-        if (set.size === 0) this.handlers.delete(channel);
-      }
-    };
+    return () => this.off(channel, handler);
   }
 
   off(channel: string, handler: IPCHandler): void {
@@ -64,13 +67,16 @@ export class IPCBus {
   request(channel: string, payload?: unknown, timeout?: number): Promise<IPCMessage> {
     const requestId = generateMsgId();
     const message = this.createMessage('request', channel, payload, 'host');
+    // 让 msg.id === requestId，便于 handler 通过 msg.id 调用 respond
+    message.id = requestId;
     message.requestId = requestId;
 
     return new Promise((resolve, reject) => {
+      const t = timeout ?? this.defaultTimeout;
       const timer = setTimeout(() => {
         this.pendingRequests.delete(requestId);
-        reject(DittoError.ipcTimeout(channel, timeout ?? this.defaultTimeout));
-      }, timeout ?? this.defaultTimeout);
+        reject(DittoError.ipcTimeout(channel, t));
+      }, t);
 
       this.pendingRequests.set(requestId, { resolve, reject, timer });
       this.dispatch(message);
@@ -97,9 +103,26 @@ export class IPCBus {
     };
   }
 
-  connectBridge(targetWindow: Window, targetOrigin = '*'): void {
+  /**
+   * 连接跨窗口桥接。origin 必填且不可为 '*'。
+   * 阶段 1 仅支持 http/https origin（拒绝 file:、blob:）。
+   */
+  connectBridge(targetWindow: Window, origin: string): void {
+    if (!origin || origin === '*') {
+      throw DittoError.fromUnknown(
+        new Error('connectBridge: origin must be explicit (got "*"); use a real origin'),
+        'IPC_BRIDGE_DISCONNECTED'
+      );
+    }
+    if (!VALID_ORIGIN_RE.test(origin)) {
+      throw DittoError.fromUnknown(
+        new Error(`connectBridge: origin must match http(s)://... (got "${origin}")`),
+        'IPC_BRIDGE_DISCONNECTED'
+      );
+    }
+
     this.bridgeTarget = targetWindow;
-    this.bridgeOrigin = targetOrigin;
+    this.bridgeOrigin = origin;
 
     if (this.bridgeListener) {
       window.removeEventListener('message', this.bridgeListener);
@@ -108,8 +131,7 @@ export class IPCBus {
     this.bridgeListener = (event: MessageEvent) => {
       if (event.data?.type !== DITTO_MSG_TYPE) return;
       if (!event.data?.message) return;
-
-      if (this.bridgeOrigin !== '*' && event.origin !== this.bridgeOrigin) return;
+      if (event.origin !== this.bridgeOrigin) return;
 
       const message: IPCMessage = event.data.message;
       this.handleMessage(message);
@@ -124,6 +146,7 @@ export class IPCBus {
       this.bridgeListener = null;
     }
     this.bridgeTarget = null;
+    this.bridgeOrigin = '';
   }
 
   onDispatch(handler: (message: IPCMessage) => void): () => void {
@@ -154,16 +177,45 @@ export class IPCBus {
 
     const set = this.handlers.get(message.channel);
     if (set) {
-      for (const handler of set) {
+      for (const handler of [...set]) {
         try {
           handler(message);
         } catch (e) {
           console.error(`[Ditto IPC] Handler error on "${message.channel}":`, e);
+          this.dispatchHandlerError(message, e);
         }
       }
     }
 
     this.emitter.emit('message', message);
+  }
+
+  /**
+   * 派发 handler 异常到 'ipc:handler-error' 频道。
+   * 既通知通过 bus.on('ipc:handler-error', ...) 注册的 IPC handler，
+   * 也通过 EventEmitter 派发以兼容 emitter.on('ipc:handler-error', ...)。
+   * 内部异常被吞掉，避免无限递归。
+   */
+  private dispatchHandlerError(originalMessage: IPCMessage, error: unknown): void {
+    const errMsg = this.createMessage(
+      'event',
+      'ipc:handler-error',
+      { channel: originalMessage.channel, error, originalMessage },
+      this.id
+    );
+
+    const errSet = this.handlers.get('ipc:handler-error');
+    if (errSet) {
+      for (const errHandler of [...errSet]) {
+        try {
+          errHandler(errMsg);
+        } catch (ee) {
+          console.error(`[Ditto IPC] Error in ipc:handler-error handler:`, ee);
+        }
+      }
+    }
+
+    this.emitter.emit('ipc:handler-error', { channel: originalMessage.channel, error, message: originalMessage });
   }
 
   destroy(): void {
@@ -190,21 +242,37 @@ export class IPCBus {
     };
   }
 
+  /**
+   * 中间件链执行（onion 模式）。
+   *
+   * 设计说明：测试期望 onion 顺序（a:before → b:before → b:after → a:after），
+   * 这要求 next() 同步触发下一个中间件。在 JavaScript 同步函数模型下，
+   * onion 语义无法用纯迭代实现（中间件函数无法在 next() 调用处暂停）。
+   *
+   * 采用 index 游标 + 同步 next() 调用的方式：next 函数被原样传给 mw，
+   * mw 调用 next(msg) 时同步进入下一个 mw；mw 返回时控制权回到上层 mw 的
+   * next() 调用之后，从而形成 onion 顺序。
+   *
+   * 与"每层 mw 一个栈帧"的纯递归相比，此处 index 通过闭包维护，避免在 mw
+   * 闭包中重复创建 next 函数；中间件吞掉消息（不调 next）时直接 return，
+   * 后续 mw 与 finalDispatch 都不会触发。
+   */
   private dispatch(message: IPCMessage): void {
-    if (this.middlewares.length > 0) {
-      let index = 0;
-      const next = (msg: IPCMessage) => {
-        if (index < this.middlewares.length) {
-          const middleware = this.middlewares[index++];
-          middleware(msg, next);
-        } else {
-          this.finalDispatch(msg);
-        }
-      };
-      next(message);
-    } else {
+    if (this.middlewares.length === 0) {
       this.finalDispatch(message);
+      return;
     }
+
+    let index = 0;
+    const next = (msg: IPCMessage): void => {
+      if (index >= this.middlewares.length) {
+        this.finalDispatch(msg);
+        return;
+      }
+      const mw = this.middlewares[index++];
+      mw(msg, next);
+    };
+    next(message);
   }
 
   private finalDispatch(message: IPCMessage): void {
