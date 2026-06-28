@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { getVFS } from '@ditto/services';
+import { getVFS, useDialogStore } from '@ditto/services';
 
 const vfs = getVFS();
+const dialogStore = useDialogStore();
 const currentPath = ref('/');
 const entries = ref(await vfs.ls('/'));
 const loading = ref(false);
@@ -50,8 +51,15 @@ function formatDate(ts: number): string {
 }
 
 async function createFolder() {
-  const name = prompt('文件夹名称:');
-  if (!name) return;
+  const result = await dialogStore.open('prompt', {
+    title: '新建文件夹',
+    message: '请输入文件夹名称',
+    placeholder: '文件夹名称',
+    okText: '创建',
+    cancelText: '取消',
+  });
+  if (!result.confirmed || !result.value?.trim()) return;
+  const name = result.value.trim();
   const path = currentPath.value === '/' ? `/${name}` : `${currentPath.value}/${name}`;
   try {
     await vfs.mkdir(path);
@@ -62,8 +70,15 @@ async function createFolder() {
 }
 
 async function createFile() {
-  const name = prompt('文件名称:');
-  if (!name) return;
+  const result = await dialogStore.open('prompt', {
+    title: '新建文件',
+    message: '请输入文件名称',
+    placeholder: '文件名称',
+    okText: '创建',
+    cancelText: '取消',
+  });
+  if (!result.confirmed || !result.value?.trim()) return;
+  const name = result.value.trim();
   const path = currentPath.value === '/' ? `/${name}` : `${currentPath.value}/${name}`;
   try {
     await vfs.writeText(path, '');
@@ -74,7 +89,13 @@ async function createFile() {
 }
 
 async function deleteEntry(entry: { path: string; name: string }) {
-  if (!confirm(`确定删除 "${entry.name}" 吗？`)) return;
+  const result = await dialogStore.open('confirm', {
+    title: '删除确认',
+    message: `确定删除 "${entry.name}" 吗？此操作不可撤销。`,
+    okText: '删除',
+    cancelText: '取消',
+  });
+  if (!result.confirmed) return;
   try {
     await vfs.delete(entry.path);
     await navigate(currentPath.value);

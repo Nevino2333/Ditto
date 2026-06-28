@@ -1,7 +1,7 @@
 {
   "id": "com.ditto.notes",
   "name": "Ditto Notes",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "轻量级 Markdown 笔记应用",
   "icon": "📝",
   "entry": "frontend/index.html",

@@ -163,8 +163,10 @@ ditto-webos/
 ## 文档导航
 
 - [架构文档](docs/architecture.md) — 内核架构、Cell 对称设计、生命周期状态机、沙盒安全、权限系统、IPCBus v2、服务编排
-- [第三方应用开发指南](docs/third-party-app-development.md) — manifest 规范、.dit 打包、9 个 SDK composable、后端 Cell 开发、完整示例
+- [第三方应用开发指南](docs/third-party-app-development.md) — manifest 规范、.dit 打包、10 个 SDK composable、后端 Cell 开发、完整示例
 - [主题与定制](docs/theme-system.md) — ThemeTokens 结构、自定义主题、运行时切换、组件级 override、动画预设
+- [深度定制指南](docs/customization-guide.md) — 内核配置、customTokens、主题适配器、SDK 主题 API、教育场景定制
+- [教育部署指南](docs/education-deployment.md) — 树莓派/老旧 PC 部署、机房批量部署、Kiosk 模式、多用户管控、Chrome 80 兼容
 - [部署指南](docs/deployment.md) — 开发/生产部署、PWA 离线、环境变量、性能优化、Chrome 80 兼容
 - [API 参考](docs/api-reference.md) — Kernel / ServiceRegistry / AppCellManager / ClientCell / CellBridge / PermissionManager / IPCBus API
 

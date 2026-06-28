@@ -12,6 +12,11 @@ const FileManager = defineAsyncComponent({ loader: () => import('./apps/FileMana
 const Settings = defineAsyncComponent({ loader: () => import('./apps/Settings.vue'), loadingComponent: AppLoading });
 const About = defineAsyncComponent({ loader: () => import('./apps/About.vue'), loadingComponent: AppLoading });
 const Market = defineAsyncComponent({ loader: () => import('./apps/Market.vue'), loadingComponent: AppLoading });
+const Terminal = defineAsyncComponent({ loader: () => import('./apps/Terminal.vue'), loadingComponent: AppLoading });
+const TextEditor = defineAsyncComponent({ loader: () => import('./apps/TextEditor.vue'), loadingComponent: AppLoading });
+const SystemMonitor = defineAsyncComponent({ loader: () => import('./apps/SystemMonitor.vue'), loadingComponent: AppLoading });
+const Chat = defineAsyncComponent({ loader: () => import('./apps/Chat.vue'), loadingComponent: AppLoading });
+const ResourceHub = defineAsyncComponent({ loader: () => import('./apps/ResourceHub.vue'), loadingComponent: AppLoading });
 
 const windowStore = useWindowStore();
 const appStore = useAppStore();
@@ -138,6 +143,11 @@ const builtinAppComponents: Record<string, any> = {
   'com.ditto.settings': Settings,
   'com.ditto.about': About,
   'com.ditto.market': Market,
+  'com.ditto.terminal': Terminal,
+  'com.ditto.editor': TextEditor,
+  'com.ditto.monitor': SystemMonitor,
+  'com.ditto.chat': Chat,
+  'com.ditto.resources': ResourceHub,
 };
 
 function getAppComponent(appId: string) {
@@ -306,6 +316,13 @@ function onDesktopContextMenu(e: MouseEvent) {
     y: e.clientY,
     items: [
       { label: '刷新桌面', icon: '🔄', action: () => {} },
+      { divider: true, label: '' },
+      { label: '终端', icon: '💻', action: () => launchApp('com.ditto.terminal') },
+      { label: '文本编辑器', icon: '📝', action: () => launchApp('com.ditto.editor') },
+      { label: '文件管理器', icon: '📁', action: () => launchApp('com.ditto.files') },
+      { label: '系统监视器', icon: '📊', action: () => launchApp('com.ditto.monitor') },
+      { label: '聊天室', icon: '💬', action: () => launchApp('com.ditto.chat') },
+      { label: '资源仓库', icon: '📦', action: () => launchApp('com.ditto.resources') },
       { divider: true, label: '' },
       { label: '系统设置', icon: '⚙️', action: () => launchApp('com.ditto.settings') },
       { label: '关于 Ditto', icon: 'ℹ️', action: () => launchApp('com.ditto.about') },

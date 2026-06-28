@@ -17,7 +17,7 @@ const messagesContainer = ref<HTMLElement | null>(null);
 let ws: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-const serverUrl = 'ws://localhost:3001/ws';
+const serverUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
 
 function connect() {
   if (ws) return;
