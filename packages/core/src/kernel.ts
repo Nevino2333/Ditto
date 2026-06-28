@@ -1,4 +1,4 @@
-import type { DittoConfig } from '@ditto/shared';
+import type { DittoConfig, DeepPartial } from '@ditto/shared';
 import { mergeConfig } from '@ditto/shared';
 import { EventEmitter } from './event/emitter';
 import { PersistenceStore } from './persistence/store';
@@ -32,7 +32,7 @@ export class DittoKernel {
   private _state: KernelState = 'created';
   private containerEl: HTMLElement | null = null;
 
-  constructor(config?: Partial<DittoConfig>) {
+  constructor(config?: DeepPartial<DittoConfig>) {
     this.config = mergeConfig(config ?? {});
     this.services = new ServiceRegistry();
     this.lifecycle = new LifecycleOrchestrator();
@@ -163,7 +163,7 @@ export class DittoKernel {
   }
 }
 
-export function createKernel(config?: Partial<DittoConfig>): DittoKernel {
+export function createKernel(config?: DeepPartial<DittoConfig>): DittoKernel {
   return new DittoKernel(config);
 }
 

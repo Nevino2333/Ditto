@@ -3,18 +3,18 @@ import { createKernel, DittoKernel } from '../kernel';
 
 describe('DittoKernel v2', () => {
   it('createKernel 返回 DittoKernel 实例', () => {
-    const k = createKernel({ kernel: { dev: true } } as any);
+    const k = createKernel({ kernel: { dev: true } });
     expect(k).toBeInstanceOf(DittoKernel);
   });
 
   it('init 后 stage 为 ready', async () => {
-    const k = createKernel({ kernel: { dev: true } } as any);
+    const k = createKernel({ kernel: { dev: true } });
     await k.init();
     expect(k.lifecycle.stage).toBe('ready');
   });
 
   it('init 后 serviceRegistry 可用', async () => {
-    const k = createKernel({ kernel: { dev: true } } as any);
+    const k = createKernel({ kernel: { dev: true } });
     await k.init();
     expect(k.services).toBeTruthy();
     expect(k.services.list()).toContain('ipc');
@@ -24,13 +24,13 @@ describe('DittoKernel v2', () => {
   });
 
   it('init 后 cellManager 可用', async () => {
-    const k = createKernel({ kernel: { dev: true } } as any);
+    const k = createKernel({ kernel: { dev: true } });
     await k.init();
     expect(k.cellManager).toBeTruthy();
   });
 
   it('destroy 后所有 service 关闭', async () => {
-    const k = createKernel({ kernel: { dev: true } } as any);
+    const k = createKernel({ kernel: { dev: true } });
     await k.init();
     await k.destroy();
     // 二次 destroy 不抛错

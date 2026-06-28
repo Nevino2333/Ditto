@@ -1,5 +1,9 @@
 import type { ThemeTokens } from '@ditto/shared';
 
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
 export interface DittoConfig {
   kernel: {
     id: string;
@@ -85,7 +89,7 @@ export const defaultConfig: DittoConfig = {
   },
 };
 
-export function mergeConfig(partial: Partial<DittoConfig>): DittoConfig {
+export function mergeConfig(partial: DeepPartial<DittoConfig>): DittoConfig {
   return deepMerge(defaultConfig, partial) as DittoConfig;
 }
 

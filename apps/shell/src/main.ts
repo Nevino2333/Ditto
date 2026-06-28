@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import { getKernel } from '@ditto/core';
+import { createKernel } from '@ditto/core';
 import { getThemeEngine } from '@ditto/theme';
 import { useAppStore, useWindowStore } from '@ditto/services';
 import App from './App.vue';
@@ -11,7 +11,7 @@ const pinia = createPinia();
 app.use(pinia);
 
 async function bootstrap() {
-  const kernel = getKernel();
+  const kernel = createKernel({ kernel: { dev: true } });
   await kernel.init();
 
   const themeEngine = getThemeEngine();
