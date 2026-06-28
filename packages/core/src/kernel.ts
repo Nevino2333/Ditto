@@ -1,53 +1,57 @@
-import { IPCBus } from './ipc/bus';
-import { EventEmitter } from './event/emitter';
-import { PluginLoader } from './plugin/loader';
-import { PersistenceStore } from './persistence/store';
-import { PermissionManager } from './sandbox/permission';
 import type { DittoConfig } from '@ditto/shared';
-import { defaultConfig, mergeConfig } from '@ditto/shared';
+import { mergeConfig } from '@ditto/shared';
+import { EventEmitter } from './event/emitter';
+import { PersistenceStore } from './persistence/store';
+import { IPCBus } from './ipc/bus';
+import { PermissionManager } from './permission/manager';
+import { ServiceRegistry } from './service-registry';
+import { LifecycleOrchestrator } from './lifecycle-orchestrator';
+import { AppCellManager } from './app-cell/manager';
 
 export type KernelState = 'created' | 'initializing' | 'ready' | 'destroying' | 'destroyed';
 
-export type KernelLifecycleHook = {
-  beforeInit?: (kernel: DittoKernel) => void | Promise<void>;
-  afterInit?: (kernel: DittoKernel) => void | Promise<void>;
-  beforeDestroy?: (kernel: DittoKernel) => void | Promise<void>;
-  afterDestroy?: (kernel: DittoKernel) => void | Promise<void>;
-};
-
+/**
+ * DittoKernel v2：以 Cell 为中心的服务编排器。
+ *
+ * 关键变更：
+ * - 删除全局单例 getKernel()，改用 createKernel() 显式创建
+ * - 用 ServiceRegistry 编排服务，而非硬挂成员
+ * - 用 LifecycleOrchestrator 阶段化启动，单 stage 失败不中断
+ * - AppCellManager 替代 PluginLoader + AppRuntime
+ */
 export class DittoKernel {
-  readonly ipc: IPCBus;
+  readonly config: DittoConfig;
+  readonly services: ServiceRegistry;
+  readonly lifecycle: LifecycleOrchestrator;
   readonly events: EventEmitter;
   readonly store: PersistenceStore;
+  readonly ipc: IPCBus;
   readonly permissions: PermissionManager;
-  readonly plugins: PluginLoader;
-  readonly config: DittoConfig;
+  readonly cellManager: AppCellManager;
 
   private _state: KernelState = 'created';
-  private lifecycleHooks: KernelLifecycleHook[] = [];
+  private containerEl: HTMLElement | null = null;
 
   constructor(config?: Partial<DittoConfig>) {
     this.config = mergeConfig(config ?? {});
-    this.ipc = new IPCBus(this.config.kernel.id);
+    this.services = new ServiceRegistry();
+    this.lifecycle = new LifecycleOrchestrator();
     this.events = new EventEmitter();
     this.store = new PersistenceStore();
-    this.permissions = new PermissionManager(
-      this.config.permissions.persistDecisions ? this.store : undefined
-    );
-    this.plugins = new PluginLoader(this.ipc, this.permissions);
+    this.ipc = new IPCBus(this.config.kernel.id);
+    this.permissions = new PermissionManager({
+      dev: this.config.kernel.dev ?? false,
+      store: this.store,
+    });
+
+    // cellManager 在 init 时创建（需要 container）
+    this.cellManager = null as unknown as AppCellManager;
+
+    this.registerStages();
   }
 
-  get state(): KernelState {
-    return this._state;
-  }
-
-  addLifecycleHook(hook: KernelLifecycleHook): void {
-    this.lifecycleHooks.push(hook);
-  }
-
-  removeLifecycleHook(hook: KernelLifecycleHook): void {
-    const idx = this.lifecycleHooks.indexOf(hook);
-    if (idx !== -1) this.lifecycleHooks.splice(idx, 1);
+  setContainer(element: HTMLElement): void {
+    this.containerEl = element;
   }
 
   async init(): Promise<void> {
@@ -57,31 +61,19 @@ export class DittoKernel {
     }
 
     this._state = 'initializing';
-
-    for (const hook of this.lifecycleHooks) {
-      if (hook.beforeInit) await hook.beforeInit(this);
-    }
-
     this.events.emit('kernel:initializing', undefined);
 
     try {
-      if (this.config.permissions.persistDecisions) {
-        const savedPermissions = this.store.get<Record<string, string>>('permissions');
-        if (savedPermissions) {
-          this.permissions.loadFromStorage(savedPermissions);
-        }
-      }
+      await this.lifecycle.init(this);
 
-      this.ipc.onDispatch((message) => {
-        this.plugins.routeMessage(message);
-      });
+      // 创建 cellManager（如果未创建）
+      if (!(this.cellManager as unknown as AppCellManager)?.getAllCells) {
+        const container = this.containerEl ?? document.body;
+        (this as any).cellManager = new AppCellManager(this.ipc, this.permissions, container);
+      }
 
       this._state = 'ready';
       this.events.emit('kernel:ready', undefined);
-
-      for (const hook of this.lifecycleHooks) {
-        if (hook.afterInit) await hook.afterInit(this);
-      }
     } catch (e) {
       this._state = 'created';
       this.events.emit('kernel:error', e);
@@ -93,43 +85,87 @@ export class DittoKernel {
     return this._state === 'ready';
   }
 
+  get state(): KernelState {
+    return this._state;
+  }
+
   async destroy(): Promise<void> {
     if (this._state === 'destroyed' || this._state === 'destroying') return;
 
     this._state = 'destroying';
-
-    for (const hook of this.lifecycleHooks) {
-      if (hook.beforeDestroy) await hook.beforeDestroy(this);
-    }
-
     this.events.emit('kernel:destroying', undefined);
 
     try {
-      await this.plugins.destroy();
+      await this.lifecycle.destroy(this);
+      await this.services.shutdown();
       this.ipc.destroy();
       this.events.removeAllListeners();
-      this._state = 'destroyed';
-
-      for (const hook of this.lifecycleHooks) {
-        if (hook.afterDestroy) await hook.afterDestroy(this);
-      }
     } catch (e) {
-      this._state = 'destroyed';
       console.error('[Ditto Kernel] Error during destroy:', e);
     }
+
+    this._state = 'destroyed';
+  }
+
+  private registerStages(): void {
+    // storage stage
+    this.lifecycle.onStage('storage', {
+      onInit: () => {
+        // PersistenceStore 已在构造函数创建，这里可加载持久化数据
+      },
+      onDestroy: () => {
+        this.store.clear();
+      },
+    });
+
+    // events stage（已构造，无需额外操作）
+    this.lifecycle.onStage('events', {
+      onInit: () => {},
+    });
+
+    // ipc stage
+    this.lifecycle.onStage('ipc', {
+      onInit: () => {
+        this.services.register('ipc', () => this.ipc);
+      },
+    });
+
+    // permissions stage
+    this.lifecycle.onStage('permissions', {
+      onInit: () => {
+        this.permissions.loadFromStore();
+        this.services.register('permissions', () => this.permissions);
+      },
+    });
+
+    // services stage（阶段 2 注册更多服务）
+    this.lifecycle.onStage('services', {
+      onInit: () => {
+        this.services.register('events', () => this.events);
+        this.services.register('store', () => this.store);
+      },
+    });
+
+    // cells stage
+    this.lifecycle.onStage('cells', {
+      onInit: () => {
+        const container = this.containerEl ?? document.body;
+        const cm = new AppCellManager(this.ipc, this.permissions, container);
+        (this as any).cellManager = cm;
+        this.services.register('cells', () => cm);
+      },
+      onDestroy: async () => {
+        if ((this.cellManager as unknown as AppCellManager)?.destroy) {
+          await (this.cellManager as unknown as AppCellManager).destroy();
+        }
+      },
+    });
   }
 }
-
-let kernelInstance: DittoKernel | null = null;
 
 export function createKernel(config?: Partial<DittoConfig>): DittoKernel {
-  kernelInstance = new DittoKernel(config);
-  return kernelInstance;
+  return new DittoKernel(config);
 }
 
-export function getKernel(): DittoKernel {
-  if (!kernelInstance) {
-    kernelInstance = new DittoKernel();
-  }
-  return kernelInstance;
-}
+// getKernel() 已删除（破坏性变更）。
+// 迁移：import { createKernel } from '@ditto/core'; const kernel = createKernel(config);

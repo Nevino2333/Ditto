@@ -4,6 +4,7 @@ export interface DittoConfig {
   kernel: {
     id: string;
     strictMode: boolean;
+    dev?: boolean;
   };
   window: {
     defaultWidth: number;
