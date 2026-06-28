@@ -244,7 +244,7 @@ export function createCellRoutes(deps: CellRouteDeps): Hono<{ Variables: Variabl
       return c.json({ error: 'Internal cell error', message: e instanceof Error ? e.message : String(e) }, 500);
     }
 
-    return c.json(responseBody, statusCode);
+    return c.json(responseBody, statusCode as any);
   });
 
   return router;

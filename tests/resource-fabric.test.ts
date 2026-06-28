@@ -24,7 +24,7 @@ describe('ResourceQuotaManager', () => {
     }
     const result = quotaManager.checkQuota('com.test.app6', 'user-1');
     expect(result.allowed).toBe(false);
-    expect(result.reason).toContain('maximum number');
+    expect(result.reason).toContain('已达到应用数量上限');
   });
 
   it('should detect over-quota', () => {

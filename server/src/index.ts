@@ -154,8 +154,8 @@ const server = Bun.serve({
   fetch(req, svr) {
     const url = new URL(req.url);
     if (url.pathname === '/ws' && req.headers.get('upgrade') === 'websocket') {
-      const success = svr.upgrade(req, { data: { clientId: crypto.randomUUID() } });
-      if (success) return undefined as any;
+      const success = svr.upgrade(req, { data: { clientId: crypto.randomUUID() } } as any);
+      if (success) return undefined as any as Response;
     }
     return app.fetch(req, svr);
   },

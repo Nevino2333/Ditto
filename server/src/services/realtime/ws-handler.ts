@@ -6,8 +6,13 @@ interface ClientData {
   appId?: string;
 }
 
+interface WSLike {
+  data: ClientData;
+  send: (data: string) => void;
+}
+
 interface ConnectedClient {
-  ws: { send: (data: string) => void };
+  ws: WSLike;
   userId: string;
   appId?: string;
   channels: Set<string>;
@@ -17,13 +22,13 @@ const clients = new Map<string, ConnectedClient>();
 
 export function createWebSocketHandler(cellManager?: AppCellManager) {
   return {
-    open(ws: { data: ClientData; send: (data: string) => void }) {
+    open(ws: WSLike) {
       const clientId = crypto.randomUUID?.() ?? `${Date.now()}`;
       ws.data = { clientId };
       console.log(`[WS] Client connected: ${clientId}`);
     },
 
-    message(ws: { data: ClientData; send: (data: string) => void }, message: string | Buffer) {
+    message(ws: WSLike, message: string | Buffer) {
       try {
         const data = JSON.parse(message.toString());
 
@@ -116,7 +121,7 @@ export function createWebSocketHandler(cellManager?: AppCellManager) {
       }
     },
 
-    close(ws: { data: ClientData }) {
+    close(ws: WSLike) {
       const client = clients.get(ws.data.clientId);
       if (cellManager && client?.appId) {
         const cells = cellManager.getCellsByApp(client.appId);

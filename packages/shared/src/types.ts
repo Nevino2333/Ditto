@@ -341,7 +341,7 @@ export interface CellWSHandler {
 }
 
 export interface CellMiddleware {
-  (req: CellRequest, res: CellResponse, next: () => Promise<void>): Promise<void>;
+  (req: CellRequest): Promise<CellResponse | void>;
 }
 
 export interface CellRequest {

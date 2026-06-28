@@ -71,17 +71,17 @@ export class CellRouter implements CellRouterInterface {
           query: c.req.query() ?? {},
           params: c.req.param() ?? {},
           body: await this.parseBody(c),
-          userId: c.get('userId') ?? c.header('X-User-Id'),
+          userId: c.get('userId') ?? c.req.header('X-User-Id'),
         };
 
         for (const mw of this.middlewares) {
           const result = await mw(req);
           if (result) {
-            return c.json(result, typeof (result as any).status === 'number' ? (result as any).status : 403);
+            return c.json(result, 403);
           }
         }
 
-        let statusCode = 200;
+        let statusCode: number = 200;
         let responseBody: unknown = null;
         let responseHeaders: Record<string, string> = {};
 
@@ -116,7 +116,7 @@ export class CellRouter implements CellRouterInterface {
         if (responseBody instanceof Uint8Array) {
           return new Response(responseBody, { status: statusCode, headers: responseHeaders });
         }
-        return c.json(responseBody, statusCode, responseHeaders);
+        return c.json(responseBody, statusCode as any, responseHeaders);
       };
 
       switch (route.method) {

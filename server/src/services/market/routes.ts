@@ -1100,7 +1100,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
 
   router.post('/apps/:appId/reviews', async (c) => {
     const appId = c.req.param('appId');
-    const userId = c.header('X-User-Id');
+    const userId = c.req.header('X-User-Id');
     if (!userId) return c.json({ error: 'Authentication required' }, 401);
 
     const body = await c.req.json<{ rating: number; comment: string }>();
