@@ -1,18 +1,27 @@
 export type DittoErrorCode =
   | 'KERNEL_NOT_INITIALIZED'
   | 'KERNEL_ALREADY_INITIALIZED'
+  | 'KERNEL_STAGE_FAILED'
   | 'IPC_REQUEST_TIMEOUT'
   | 'IPC_HANDLER_ERROR'
   | 'IPC_NO_HANDLER'
+  | 'IPC_NO_ROUTE'
   | 'IPC_BRIDGE_DISCONNECTED'
   | 'PLUGIN_NOT_FOUND'
   | 'PLUGIN_ALREADY_LOADED'
   | 'PLUGIN_LOAD_FAILED'
   | 'PLUGIN_PERMISSION_DENIED'
+  | 'CELL_NOT_FOUND'
+  | 'CELL_ALREADY_RUNNING'
+  | 'CELL_START_FAILED'
+  | 'CELL_PERMISSION_DENIED'
   | 'PERMISSION_DENIED'
   | 'PERMISSION_REQUIRED'
   | 'SANDBOX_CREATE_FAILED'
   | 'SANDBOX_MESSAGE_INVALID'
+  | 'SANDBOX_MODE_UNSUPPORTED'
+  | 'SERVICE_NOT_REGISTERED'
+  | 'SERVICE_ALREADY_REGISTERED'
   | 'VFS_FILE_NOT_FOUND'
   | 'VFS_PATH_INVALID'
   | 'VFS_PROVIDER_NOT_FOUND'
@@ -77,6 +86,34 @@ export class DittoError extends Error {
 
   static storageUnavailable(): DittoError {
     return new DittoError('STORAGE_UNAVAILABLE', 'Storage is not available in this environment', { recoverable: true });
+  }
+
+  static cellNotFound(id: string): DittoError {
+    return new DittoError('CELL_NOT_FOUND', `Cell "${id}" not found`);
+  }
+
+  static cellAlreadyRunning(id: string): DittoError {
+    return new DittoError('CELL_ALREADY_RUNNING', `Cell "${id}" is already running`);
+  }
+
+  static cellStartFailed(id: string, cause?: unknown): DittoError {
+    return new DittoError('CELL_START_FAILED', `Failed to start cell "${id}"`, { cause: cause instanceof Error ? cause : undefined });
+  }
+
+  static sandboxModeUnsupported(mode: string): DittoError {
+    return new DittoError('SANDBOX_MODE_UNSUPPORTED', `Sandbox mode "${mode}" is not supported in this build`);
+  }
+
+  static serviceNotRegistered(id: string): DittoError {
+    return new DittoError('SERVICE_NOT_REGISTERED', `Service "${id}" is not registered`);
+  }
+
+  static serviceAlreadyRegistered(id: string): DittoError {
+    return new DittoError('SERVICE_ALREADY_REGISTERED', `Service "${id}" is already registered`);
+  }
+
+  static ipcNoRoute(target: string): DittoError {
+    return new DittoError('IPC_NO_ROUTE', `No route for target "${target}"`, { recoverable: true });
   }
 }
 
