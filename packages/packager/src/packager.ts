@@ -12,6 +12,7 @@ const TYPE_EXTENSION_MAP: Record<PackOptions['type'], string> = {
   widget: '.ditx',
   plugin: '.ditc',
   theme: '.ditz',
+  dit: '.dit',
 };
 
 const CODE_FILE_EXTENSIONS = new Set(['.js', '.ts', '.html', '.css', '.mjs', '.cjs']);

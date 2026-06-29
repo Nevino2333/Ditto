@@ -53,7 +53,7 @@ interface AppManifest {
   description?: string;     // 一句话描述
   icon?: string;            // 图标（emoji 或图片路径）
   category?: string;        // 分类：productivity / utility / entertainment / education...
-  type?: 'app' | 'widget' | 'plugin' | 'theme';  // 默认 'app'
+  type?: 'app' | 'widget' | 'plugin' | 'theme' | 'dit';  // 默认 'app'，详见下方「两种 type 的关系」
 
   // ─── 沙盒与权限 ───
   sandbox: 'strict' | 'trusted';  // strict=iframe 隔离，trusted=Shadow DOM

@@ -606,6 +606,16 @@ function syncScroll() {
   lineNumbers.scrollTop = textarea.scrollTop;
 }
 
+// 防抖：高亮正则扫描计算密集，150ms 内多次按键只触发一次（树莓派友好）
+var highlightTimer = null;
+function scheduleHighlight() {
+  if (highlightTimer) clearTimeout(highlightTimer);
+  highlightTimer = setTimeout(function() {
+    updateHighlight();
+    highlightTimer = null;
+  }, 150);
+}
+
 function handleInput() {
   const file = getActiveFile();
   if (file) {
@@ -616,7 +626,7 @@ function handleInput() {
       renderFileList();
     }
   }
-  updateHighlight();
+  scheduleHighlight();
   updateLineNumbers();
   updateCursorStatus();
 }

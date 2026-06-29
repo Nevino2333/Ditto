@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { AppCellManager } from '../app-cell/manager';
 import type { AppManifest } from '@ditto/shared';
 import { Packager } from '@ditto/packager';
+import { injectPolyfill } from '../../polyfill';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -126,9 +127,9 @@ export function createInstallRoutes(cellManager: AppCellManager, appsDir: string
     if (!fs.existsSync(frontendPath)) {
       const indexPath = path.join(appDir, 'frontend', 'index.html');
       if (fs.existsSync(indexPath) && !filePath.includes('.')) {
-        const indexData = fs.readFileSync(indexPath);
+        const indexData = fs.readFileSync(indexPath, 'utf-8');
         c.header('Content-Type', 'text/html');
-        return c.body(indexData);
+        return c.body(injectPolyfill(indexData));
       }
       return c.json({ error: 'File not found' }, 404);
     }
@@ -137,9 +138,9 @@ export function createInstallRoutes(cellManager: AppCellManager, appsDir: string
     if (stat.isDirectory()) {
       const indexPath = path.join(frontendPath, 'index.html');
       if (fs.existsSync(indexPath)) {
-        const data = fs.readFileSync(indexPath);
+        const data = fs.readFileSync(indexPath, 'utf-8');
         c.header('Content-Type', 'text/html');
-        return c.body(data);
+        return c.body(injectPolyfill(data));
       }
       return c.json({ error: 'Directory listing not allowed' }, 403);
     }

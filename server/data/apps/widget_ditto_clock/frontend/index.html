@@ -163,8 +163,6 @@
 
     var days = ['日','一','二','三','四','五','六'];
     dateDisplay.textContent = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 周' + days[now.getDay()];
-
-    requestAnimationFrame(updateClock);
   }
 
   clockContainer.addEventListener('click', function() {
@@ -173,7 +171,9 @@
     digitalWrap.classList.toggle('active', !isAnalog);
   });
 
+  // 4fps：树莓派友好（60fps RAF → 250ms setInterval，CPU 降 12 倍，秒针视觉仍平滑）
   updateClock();
+  setInterval(updateClock, 250);
 })();
 </script>
 </body>

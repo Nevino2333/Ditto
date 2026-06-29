@@ -138,7 +138,8 @@ export class CellBridge {
       this.maxRetryDelay
     );
     this.retryCount++;
-    console.log(`[Ditto CellBridge] Reconnecting in ${delay}ms (attempt ${this.retryCount}/${this.maxRetries})`);
+    // 重连进度：debug 级别（生产浏览器默认隐藏，DevTools verbose 级别可见）
+    console.debug(`[Ditto CellBridge] Reconnecting in ${delay}ms (attempt ${this.retryCount}/${this.maxRetries})`);
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;

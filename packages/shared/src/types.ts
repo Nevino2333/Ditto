@@ -53,7 +53,7 @@ export interface AppManifest {
     healthCheck?: string;
     env?: Record<string, string>;
   };
-  type?: 'app' | 'widget' | 'plugin' | 'theme';
+  type?: 'app' | 'widget' | 'plugin' | 'theme' | 'dit';
   signature?: {
     algorithm: string;
     value: string;
@@ -445,7 +445,7 @@ export interface ThemeManifest {
 }
 
 export interface PackOptions {
-  type: 'app' | 'widget' | 'plugin' | 'theme';
+  type: 'app' | 'widget' | 'plugin' | 'theme' | 'dit';
   manifest: AppManifest;
   frontendDir: string;
   backendDir?: string;
@@ -457,7 +457,7 @@ export interface PackOptions {
 
 export interface UnpackResult {
   manifest: AppManifest;
-  type: 'app' | 'widget' | 'plugin' | 'theme';
+  type: 'app' | 'widget' | 'plugin' | 'theme' | 'dit';
   frontendDir: string;
   backendDir?: string;
   iconPath?: string;

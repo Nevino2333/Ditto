@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, defineAsyncComponent, onMounted, onUnmounted } from 'vue';
-import { DDesktop, DTaskbar, DWindow, DStartMenu, DContextMenu, DNotification, DDialog, DWidgetBoard } from '@ditto/ui';
-import { useWindowStore, useAppStore, useNotificationStore, useDialogStore, useWidgetStore } from '@ditto/services';
+import { ref, computed, watch, defineAsyncComponent, onMounted, onUnmounted } from 'vue';
+import {
+  DDesktop, DTaskbar, DWindow, DStartMenu, DContextMenu, DNotification, DDialog, DWidgetBoard,
+  DNotificationCenter, DControlCenter, DLockScreen, DTaskSwitcher, DGlobalSearch, DCalendarPanel,
+} from '@ditto/ui';
+import {
+  useWindowStore, useAppStore, useNotificationStore, useDialogStore, useWidgetStore,
+  usePowerStore, useHotkeyStore, useGlobalHotkey, useSearchStore, useDefaultAppsStore,
+} from '@ditto/services';
 import { getThemeEngine, adaptExternalTokens, applyTypographyTokens } from '@ditto/theme';
 import type { ExternalThemeTokens } from '@ditto/theme';
 import type { AppManifest } from '@ditto/shared';
@@ -23,6 +29,10 @@ const appStore = useAppStore();
 const widgetStore = useWidgetStore();
 const notificationStore = useNotificationStore();
 const dialogStore = useDialogStore();
+const powerStore = usePowerStore();
+const searchStore = useSearchStore();
+const defaultAppsStore = useDefaultAppsStore();
+const hotkeyStore = useGlobalHotkey(); // 在 Shell 根激活全局快捷键监听
 const themeEngine = getThemeEngine();
 
 const startMenuVisible = ref(false);
@@ -30,6 +40,14 @@ const contextMenu = ref({ visible: false, x: 0, y: 0, items: [] as { label: stri
 const clock = ref('');
 const appIframes = ref<Record<string, string>>({});
 const widgetIframes = ref<Record<string, string>>({});
+
+// 系统级面板可见性
+const notificationCenterVisible = ref(false);
+const controlCenterVisible = ref(false);
+const taskSwitcherVisible = ref(false);
+const globalSearchVisible = ref(false);
+const calendarVisible = ref(false);
+const calendarAnchor = ref<{ x: number; y: number }>({ x: 0, y: 0 });
 
 let clockTimer: ReturnType<typeof setInterval>;
 let unsubscribeTheme: (() => void) | null = null;
@@ -130,6 +148,92 @@ onMounted(() => {
   unsubscribeTheme = themeEngine.subscribe((theme) => {
     broadcastToIframes('theme:changed', { id: theme.id, name: theme.name, colorScheme: theme.colorScheme });
   });
+
+  // ─── 注册全局快捷键 ───
+  // Alt+Tab：多任务切换器（capture 阶段拦截，阻止浏览器默认行为）
+  hotkeyStore.register({
+    id: 'system:task-switcher',
+    combo: 'alt+tab',
+    description: '多任务切换',
+    handler: () => {
+      // 关闭其他系统面板避免遮挡
+      notificationCenterVisible.value = false;
+      controlCenterVisible.value = false;
+      globalSearchVisible.value = false;
+      taskSwitcherVisible.value = true;
+    },
+  });
+  // Ctrl+Space：全局搜索
+  hotkeyStore.register({
+    id: 'system:global-search',
+    combo: 'ctrl+space',
+    description: '全局搜索',
+    handler: () => {
+      notificationCenterVisible.value = false;
+      controlCenterVisible.value = false;
+      taskSwitcherVisible.value = false;
+      globalSearchVisible.value = true;
+    },
+  });
+  // Meta+L / Ctrl+L：锁屏
+  hotkeyStore.register({
+    id: 'system:lock',
+    combo: 'meta+l',
+    description: '锁屏',
+    handler: () => powerStore.lock(),
+  });
+  // 单注册 Ctrl+L 以兼容无 Meta 键的键盘
+  hotkeyStore.register({
+    id: 'system:lock-ctrl',
+    combo: 'ctrl+l',
+    description: '锁屏（Ctrl 备用）',
+    handler: () => powerStore.lock(),
+  });
+
+  // ─── 注册默认全局搜索命令 ───
+  const builtinAppIds = ['com.ditto.terminal', 'com.ditto.editor', 'com.ditto.files', 'com.ditto.monitor', 'com.ditto.settings', 'com.ditto.about'];
+  for (const appId of builtinAppIds) {
+    const manifest = appStore.apps.find((a) => a.id === appId);
+    if (!manifest) continue;
+    searchStore.registerCommand({
+      id: `launch:${appId}`,
+      title: `打开 ${manifest.name}`,
+      description: manifest.description,
+      icon: manifest.icon,
+      keywords: ['open', 'launch', '打开', manifest.name, appId],
+      action: () => launchApp(appId),
+    });
+  }
+  searchStore.registerCommand({
+    id: 'system:lock-screen',
+    title: '锁屏',
+    description: '锁定当前会话',
+    icon: '🔒',
+    keywords: ['lock', '锁屏', '锁定'],
+    action: () => powerStore.lock(),
+  });
+  searchStore.registerCommand({
+    id: 'system:toggle-theme',
+    title: '切换主题',
+    description: '在浅色与深色主题间切换',
+    icon: '🎨',
+    keywords: ['theme', 'dark', 'light', '主题', '深色', '浅色'],
+    action: () => themeEngine.toggleColorScheme(),
+  });
+
+  // ─── 注册内置默认应用处理器 ───
+  // 文本编辑器作为 .md/.txt/.json/.js/.ts/.html/.css 的默认处理器
+  const textExtensions = ['.md', '.markdown', '.txt', '.json', '.js', '.ts', '.html', '.css', '.csv', '.log', '.xml', '.yml', '.yaml'];
+  for (const ext of textExtensions) {
+    defaultAppsStore.registerExtensionHandler(ext, 'com.ditto.editor', true);
+  }
+  defaultAppsStore.registerMimeHandler('text/markdown', 'com.ditto.editor', true);
+  defaultAppsStore.registerMimeHandler('text/plain', 'com.ditto.editor', true);
+  defaultAppsStore.registerMimeHandler('application/json', 'com.ditto.editor', true);
+  // 终端作为 .sh 的默认处理器
+  defaultAppsStore.registerExtensionHandler('.sh', 'com.ditto.terminal', false);
+  // 文件管理器作为目录的默认处理器
+  defaultAppsStore.registerMimeHandler('inode/directory', 'com.ditto.files', true);
 });
 
 onUnmounted(() => {
@@ -137,6 +241,102 @@ onUnmounted(() => {
   window.removeEventListener('message', onIPCMessage);
   if (unsubscribeTheme) unsubscribeTheme();
 });
+
+// ─── 监听 PowerService 事件，执行副作用 ───
+// 设计：store 只广播状态，副作用集中在 Shell（可注入自定义行为，便于 Kiosk 场景定制）
+watch(
+  () => powerStore.lastEvent,
+  (evt) => {
+    if (!evt) return;
+    // 防止短时间内同一动作重复触发
+    if (Date.now() - evt.timestamp > 5000) return;
+    switch (evt.action) {
+      case 'lock':
+        // 锁屏：保持会话，仅显示锁屏覆盖层（不关窗口）
+        // locked 状态由 watch(powerStore.locked) 单独处理 UI
+        break;
+      case 'logout':
+        // 注销：关闭所有窗口，会话由 DLockScreen 显示
+        closeAllWindows();
+        break;
+      case 'sleep':
+        // 睡眠：视觉提示后重置（PWA 无法真实睡眠）
+        notificationStore.pushNotification({
+          title: '系统进入睡眠',
+          body: '点击任意位置唤醒',
+          type: 'info',
+          source: 'power',
+          persistent: false,
+        });
+        powerStore.resetTransition();
+        break;
+      case 'restart':
+        // 重启：关闭所有窗口后重新加载 shell
+        closeAllWindows();
+        setTimeout(() => {
+          window.location.reload();
+        }, 400);
+        break;
+      case 'shutdown':
+        // 关机：关闭所有窗口并显示关机画面（PWA 无法真实关机）
+        closeAllWindows();
+        notificationStore.pushNotification({
+          title: '系统已关机',
+          body: '刷新页面以重新启动',
+          type: 'warning',
+          source: 'power',
+          persistent: true,
+        });
+        // 不立即 resetTransition，让 UI 维持关机状态
+        break;
+    }
+  },
+);
+
+function closeAllWindows() {
+  for (const w of [...windowStore.windows]) {
+    const instance = appStore.getInstanceByWindowId(w.id);
+    if (instance) appStore.terminateApp(instance.id);
+    else windowStore.closeWindow(w.id);
+  }
+}
+
+// 任务切换器选择窗口：聚焦该窗口
+function onTaskSwitcherSelect(windowId: string) {
+  windowStore.focusWindow(windowId);
+  taskSwitcherVisible.value = false;
+}
+
+// 时钟点击：展开日历面板，锚点为时钟按钮位置
+function onClockClick(e: MouseEvent) {
+  const target = e.currentTarget as HTMLElement;
+  const rect = target.getBoundingClientRect();
+  calendarAnchor.value = { x: rect.right, y: rect.top };
+  calendarVisible.value = !calendarVisible.value;
+}
+
+// 任务栏按钮：切换通知中心
+function toggleNotificationCenter() {
+  controlCenterVisible.value = false;
+  calendarVisible.value = false;
+  notificationCenterVisible.value = !notificationCenterVisible.value;
+}
+
+// 任务栏按钮：切换控制中心
+function toggleControlCenter() {
+  notificationCenterVisible.value = false;
+  calendarVisible.value = false;
+  controlCenterVisible.value = !controlCenterVisible.value;
+}
+
+// 关闭任意系统面板（点开始菜单时统一关闭）
+function closeAllSystemPanels() {
+  notificationCenterVisible.value = false;
+  controlCenterVisible.value = false;
+  taskSwitcherVisible.value = false;
+  globalSearchVisible.value = false;
+  calendarVisible.value = false;
+}
 
 const builtinAppComponents: Record<string, any> = {
   'com.ditto.files': FileManager,
@@ -179,7 +379,9 @@ function toggleTheme() {
 }
 
 function toggleStartMenu() {
-  startMenuVisible.value = !startMenuVisible.value;
+  const next = !startMenuVisible.value;
+  if (next) closeAllSystemPanels();
+  startMenuVisible.value = next;
 }
 
 function closeStartMenu() {
@@ -430,10 +632,46 @@ function onDialogCancel() {
       </button>
     </template>
     <template #tray>
-      <button class="tray-btn" @click="toggleTheme" :title="isDark ? '切换浅色' : '切换深色'">
+      <!-- 通知中心按钮（带未读 badge） -->
+      <button
+        class="tray-btn tray-btn--icon"
+        :class="{ 'tray-btn--active': notificationCenterVisible }"
+        @click="toggleNotificationCenter"
+        :title="notificationStore.unreadCount > 0 ? `${notificationStore.unreadCount} 条未读通知` : '通知中心'"
+        :aria-label="`通知中心，${notificationStore.unreadCount} 条未读`"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3.5 6.5a4.5 4.5 0 0 1 9 0v3l1 1.5H2.5l1-1.5v-3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M6.5 12.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <span v-if="notificationStore.unreadCount > 0" class="tray-badge">{{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}</span>
+      </button>
+
+      <!-- 控制中心按钮 -->
+      <button
+        class="tray-btn tray-btn--icon"
+        :class="{ 'tray-btn--active': controlCenterVisible }"
+        @click="toggleControlCenter"
+        title="控制中心"
+        aria-label="控制中心"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="5" cy="4" r="1.5" fill="currentColor"/>
+          <circle cx="10" cy="8" r="1.5" fill="currentColor"/>
+          <circle cx="6" cy="12" r="1.5" fill="currentColor"/>
+        </svg>
+      </button>
+
+      <!-- 主题切换按钮 -->
+      <button class="tray-btn tray-btn--icon" @click="toggleTheme" :title="isDark ? '切换浅色' : '切换深色'" :aria-label="isDark ? '切换到浅色主题' : '切换到深色主题'">
         {{ isDark ? '☀️' : '🌙' }}
       </button>
-      <span class="tray-clock">{{ clock }}</span>
+
+      <!-- 时钟：点击展开日历下拉 -->
+      <button class="tray-btn tray-btn--clock" @click="onClockClick" :class="{ 'tray-btn--active': calendarVisible }" title="日历" aria-label="日历">
+        <span class="tray-clock">{{ clock }}</span>
+      </button>
     </template>
   </DTaskbar>
 
@@ -465,6 +703,38 @@ function onDialogCancel() {
     @update:visible="(v) => { if (!v) dialogStore.cancel() }"
     @ok="onDialogOk"
     @cancel="onDialogCancel"
+  />
+
+  <!-- 系统级面板：通知中心 / 控制中心 / 日历下拉 -->
+  <DNotificationCenter
+    :visible="notificationCenterVisible"
+    @close="notificationCenterVisible = false"
+  />
+  <DControlCenter
+    :visible="controlCenterVisible"
+    @close="controlCenterVisible = false"
+  />
+  <DCalendarPanel
+    :visible="calendarVisible"
+    :anchor="calendarAnchor"
+    @close="calendarVisible = false"
+  />
+
+  <!-- 全局模态：多任务切换 / 全局搜索 -->
+  <DTaskSwitcher
+    :visible="taskSwitcherVisible"
+    @close="taskSwitcherVisible = false"
+    @select="onTaskSwitcherSelect"
+  />
+  <DGlobalSearch
+    :visible="globalSearchVisible"
+    @close="globalSearchVisible = false"
+  />
+
+  <!-- 锁屏：watch powerStore.locked -->
+  <DLockScreen
+    :visible="powerStore.locked"
+    @unlock="powerStore.unlock()"
   />
 </template>
 
@@ -534,9 +804,47 @@ html, body {
   padding: 4px;
   border-radius: 4px;
   transition: background 120ms;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ditto-color-text-primary, #0f172a);
 }
 
 .tray-btn:hover { background: rgba(0, 0, 0, 0.06); }
+
+.tray-btn--active {
+  background: var(--ditto-color-primary-100, rgba(59, 130, 246, 0.14));
+  color: var(--ditto-color-primary-600, #2563eb);
+}
+
+.tray-btn--icon {
+  width: 32px;
+  height: 32px;
+}
+
+.tray-btn--clock {
+  padding: 4px 10px;
+  min-height: 32px;
+}
+
+.tray-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--ditto-color-semantic-error, #ef4444);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--ditto-color-surface-overlay, #fff);
+  pointer-events: none;
+}
 
 .tray-clock {
   font-size: 12px;
@@ -568,6 +876,22 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .tray-btn--icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .tray-btn--clock {
+    padding: 8px 12px;
+  }
+
+  .tray-badge {
+    min-width: 18px;
+    height: 18px;
+    font-size: 11px;
+    line-height: 18px;
   }
 
   .tray-clock {

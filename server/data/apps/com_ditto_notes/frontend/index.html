@@ -133,7 +133,9 @@
 
     function renderPreview() {
       const note = notes.find(n => n.id === activeId);
-      document.getElementById('previewPane').innerHTML = renderMarkdown(note?.content || '');
+      // Chrome 80 边界兼容：避免可选链 ?.，显式取值
+      const content = (note && note.content) || '';
+      document.getElementById('previewPane').innerHTML = renderMarkdown(content);
     }
 
     function renderSidebar() {
