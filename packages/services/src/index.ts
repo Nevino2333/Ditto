@@ -11,3 +11,5 @@ export { useNotificationStore } from './notification-center';
 export type { NotificationEntry } from './notification-center';
 export { registerKernelServices } from './register';
 export { useDialogStore } from './dialog';
+export { useClipboardStore } from './clipboard';
+export type { ClipboardEntry } from './clipboard';

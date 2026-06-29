@@ -3,7 +3,7 @@ export type { KernelState } from './kernel';
 export { IPCBus } from './ipc/bus';
 export { EventEmitter, EventDispatcher } from './event/emitter';
 export { PermissionManager } from './permission/manager';
-export type { PermissionManagerOptions } from './permission/manager';
+export type { PermissionManagerOptions, InteractivePrompt } from './permission/manager';
 export { PersistenceStore } from './persistence/store';
 export type { MigrationStep } from './persistence/store';
 export { ServiceRegistry } from './service-registry';

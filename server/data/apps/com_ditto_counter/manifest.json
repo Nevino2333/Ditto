@@ -1,0 +1,25 @@
+{
+  "id": "com.ditto.counter",
+  "name": "Ditto Counter",
+  "version": "1.0.0",
+  "description": "协作计数器 - 演示 dit 类型应用前后端对称 Cell 架构（HTTP + WebSocket + 持久化）",
+  "icon": "🔢",
+  "entry": "frontend/index.html",
+  "category": "utility",
+  "sandbox": "trusted",
+  "permissions": ["cell:backend", "net:fetch", "net:websocket"],
+  "type": "dit",
+  "window": {
+    "width": 480,
+    "height": 560,
+    "minWidth": 360,
+    "minHeight": 420,
+    "resizable": true,
+    "maximizable": false
+  },
+  "backend": {
+    "entry": "backend/index.ts",
+    "type": "cell",
+    "healthCheck": "/health"
+  }
+}

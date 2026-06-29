@@ -5,16 +5,17 @@ import { useWindowStore } from './window-manager';
 import { useWidgetStore } from './widget';
 import { useIslandStore } from './island';
 import { useSearchStore } from './search';
+import { useClipboardStore } from './clipboard';
 import { getVFS } from './vfs';
 import { getNetProxy } from './net-proxy';
 
 /**
- * 将 services 包的 8 个 UI 服务注册到 kernel 的 ServiceRegistry。
+ * 将 services 包的 9 个 UI 服务注册到 kernel 的 ServiceRegistry。
  * 必须在 kernel.init() 之后调用（此时 ServiceRegistry 已就绪）。
  * 服务懒创建：首次 resolve 才实例化。
  *
  * ServiceId 对照 spec §9.2：
- *   dialog / notification / window / widget / island / search / vfs / net-proxy
+ *   dialog / notification / window / widget / island / search / clipboard / vfs / net-proxy
  */
 export function registerKernelServices(kernel: DittoKernel): void {
   const registry = kernel.services;
@@ -26,6 +27,7 @@ export function registerKernelServices(kernel: DittoKernel): void {
   registry.register('widget', () => useWidgetStore());
   registry.register('island', () => useIslandStore());
   registry.register('search', () => useSearchStore());
+  registry.register('clipboard', () => useClipboardStore());
 
   // 类单例
   registry.register('vfs', () => getVFS());

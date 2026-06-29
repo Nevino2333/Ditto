@@ -44,4 +44,47 @@ describe('PermissionManager v2', () => {
     pm.grant('com.ditto.a', 'fs:read');
     expect(pm.isGranted('com.ditto.b', 'fs:read')).toBe(false);
   });
+
+  it('生产模式无 interactivePrompt 时默认拒绝', async () => {
+    const prod = new PermissionManager({ dev: false });
+    const granted = await prod.request('com.ditto.x', 'fs:read');
+    expect(granted).toBe(false);
+  });
+
+  it('生产模式 interactivePrompt 用户授权后持久化', async () => {
+    const prompt = vi.fn().mockResolvedValue(true);
+    const prod = new PermissionManager({ dev: false, interactivePrompt: prompt });
+    const granted = await prod.request('com.ditto.x', 'fs:read');
+    expect(granted).toBe(true);
+    expect(prompt).toHaveBeenCalledWith('com.ditto.x', 'fs:read');
+    expect(prod.isGranted('com.ditto.x', 'fs:read')).toBe(true);
+  });
+
+  it('生产模式 interactivePrompt 用户拒绝返回 false', async () => {
+    const prompt = vi.fn().mockResolvedValue(false);
+    const prod = new PermissionManager({ dev: false, interactivePrompt: prompt });
+    const granted = await prod.request('com.ditto.x', 'fs:read');
+    expect(granted).toBe(false);
+    expect(prod.isGranted('com.ditto.x', 'fs:read')).toBe(false);
+  });
+
+  it('setInteractivePrompt 动态注入回调', async () => {
+    const prod = new PermissionManager({ dev: false });
+    // 初始无回调，拒绝
+    expect(await prod.request('com.ditto.x', 'fs:read')).toBe(false);
+    // 注入回调
+    prod.setInteractivePrompt(async () => true);
+    expect(await prod.request('com.ditto.x', 'fs:read')).toBe(true);
+  });
+
+  it('已授权能力不触发 prompt', async () => {
+    const prompt = vi.fn().mockResolvedValue(true);
+    const prod = new PermissionManager({ dev: false, interactivePrompt: prompt });
+    await prod.request('com.ditto.x', 'fs:read');
+    prompt.mockClear();
+    // 第二次请求已授权能力
+    const granted = await prod.request('com.ditto.x', 'fs:read');
+    expect(granted).toBe(true);
+    expect(prompt).not.toHaveBeenCalled();
+  });
 });

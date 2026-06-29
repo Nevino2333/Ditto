@@ -19,7 +19,7 @@ export interface ClientCellDeps {
 /**
  * ClientCell：客户端应用实例。
  * 与服务端 CellInstance 对称，承担应用全生命周期。
- * 阶段 1：load/activate/unload 完整；pause/resume 留接口（阶段 2 实现）。
+ * 支持 native/web/pwa/dit 四种类型；activate/pause/resume/unload 全部实现。
  */
 export class ClientCell {
   private _status: ClientCellStatus = 'loading';

@@ -9,6 +9,7 @@ const outputDir = path.resolve(__dirname, '..', 'server', 'data', 'market-packag
 fs.mkdirSync(outputDir, { recursive: true });
 
 const apps = [
+  { dir: 'com.ditto.counter', type: 'app' as const, hasBackend: true },
   { dir: 'com.ditto.notes', type: 'app' as const, hasBackend: true },
   { dir: 'com.ditto.calc', type: 'app' as const, hasBackend: false },
   { dir: 'com.ditto.weather', type: 'app' as const, hasBackend: false },

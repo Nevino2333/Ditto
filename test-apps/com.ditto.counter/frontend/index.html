@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ditto Counter</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .header .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e94560;
+    }
+    .header .subtitle {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .counter-display {
+      background: rgba(15, 52, 96, 0.4);
+      border: 1px solid #0f3460;
+      border-radius: 16px;
+      padding: 32px 48px;
+      text-align: center;
+      margin-bottom: 16px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      min-width: 280px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .counter-value {
+      font-size: 72px;
+      font-weight: 700;
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 8px;
+      transition: transform 0.15s ease, color 0.15s ease;
+    }
+    .counter-value.changed {
+      transform: scale(1.1);
+      color: #e94560;
+    }
+    .counter-meta {
+      font-size: 11px;
+      color: #888;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+    .counter-meta .who {
+      color: #58a6ff;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .btn {
+      background: #0f3460;
+      color: #e0e0e0;
+      border: 1px solid #1a4080;
+      border-radius: 8px;
+      padding: 12px 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .btn:hover:not(:disabled) { background: #1a4080; border-color: #e94560; }
+    .btn:active:not(:disabled) { transform: translateY(1px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.danger { background: #4a1a2a; border-color: #6a1a2a; }
+    .btn.danger:hover:not(:disabled) { background: #6a1a2a; border-color: #e94560; }
+
+    .panel {
+      background: rgba(22, 33, 62, 0.6);
+      border: 1px solid #0f3460;
+      border-radius: 12px;
+      padding: 12px;
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 12px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .panel-header .badge {
+      background: #0f3460;
+      color: #58a6ff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .panel-header .badge.live {
+      background: #1a4a2a;
+      color: #4ade80;
+    }
+    .panel-header .badge.live::before {
+      content: '● ';
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .history-list {
+      max-height: 140px;
+      overflow-y: auto;
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 11px;
+    }
+    .history-list::-webkit-scrollbar { width: 4px; }
+    .history-list::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 2px; }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(15, 52, 96, 0.3);
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item .action { color: #58a6ff; min-width: 50px; }
+    .history-item .action.inc { color: #4ade80; }
+    .history-item .action.dec { color: #fb923c; }
+    .history-item .action.reset { color: #e94560; }
+    .history-item .action.init { color: #888; }
+    .history-item .val { color: #e0e0e0; font-weight: 600; min-width: 40px; text-align: right; }
+    .history-item .time { color: #555; font-size: 10px; }
+
+    .empty-history {
+      color: #555;
+      font-size: 11px;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #0f3460;
+      color: #e0e0e0;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #e94560;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 10;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #555;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      transition: background 0.3s;
+    }
+    .status-dot.disconnected { background: #e94560; }
+    .status-dot.connecting { background: #fbbf24; }
+
+    @media (max-width: 480px) {
+      .counter-value { font-size: 56px; }
+      .counter-display { padding: 24px; }
+      .actions { gap: 6px; }
+      .btn { padding: 10px 4px; font-size: 13px; }
+    }
+    @media (max-width: 360px) {
+      body { padding: 12px; }
+      .counter-value { font-size: 48px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">🔢 Ditto Counter</div>
+    <div class="subtitle">协作计数器 · dit 类型应用示例</div>
+  </div>
+
+  <div class="counter-display">
+    <div class="counter-value" id="value">—</div>
+    <div class="counter-meta" id="meta">连接中...</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="btnDec" onclick="doDec()">−1</button>
+    <button class="btn danger" id="btnReset" onclick="doReset()">重置</button>
+    <button class="btn" id="btnInc" onclick="doInc()">+1</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <span>事件历史</span>
+      <span class="badge" id="historyBadge">0</span>
+    </div>
+    <div class="history-list" id="history">
+      <div class="empty-history">加载中...</div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span class="status-dot connecting" id="statusDot"></span>
+    <span id="statusText">连接中...</span>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== 配置 =====
+    var APP_ID = 'com.ditto.counter';
+    // 应用前端运行在 iframe 内，宿主同源提供 /api/cell/<appId>/...
+    var API_BASE = '/api/cell/' + APP_ID;
+    // 探测 Ditto SDK（如可用）
+    var sdk = window.DittoSDK || null;
+    var userId = 'user-' + Math.random().toString(36).slice(2, 8);
+
+    // ===== 状态 =====
+    var ws = null;
+    var wsConnected = false;
+    var lastValue = null;
+
+    // ===== 工具 =====
+    function el(id) { return document.getElementById(id); }
+    function fmtTime(ts) {
+      try {
+        var d = new Date(ts);
+        return d.toLocaleTimeString('zh-CN', { hour12: false });
+      } catch (e) {
+        return String(ts);
+      }
+    }
+    function showToast(msg) {
+      var t = el('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 2000);
+    }
+    function setStatus(state, text) {
+      var dot = el('statusDot');
+      dot.className = 'status-dot ' + state;
+      el('statusText').textContent = text;
+    }
+    function setButtonsDisabled(disabled) {
+      ['btnInc', 'btnDec', 'btnReset'].forEach(function (id) {
+        el(id).disabled = disabled;
+      });
+    }
+
+    // ===== HTTP 请求 =====
+    function apiCall(path, method, body) {
+      var opts = {
+        method: method || 'GET',
+        headers: { 'Content-Type': 'application/json', 'X-User-Id': userId }
+      };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      return fetch(API_BASE + path, opts).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      });
+    }
+
+    // ===== UI 更新 =====
+    function renderValue(state) {
+      var valueEl = el('value');
+      var metaEl = el('meta');
+      if (!state) return;
+      valueEl.textContent = String(state.value);
+      if (lastValue !== null && lastValue !== state.value) {
+        valueEl.classList.add('changed');
+        setTimeout(function () { valueEl.classList.remove('changed'); }, 300);
+      }
+      lastValue = state.value;
+      var who = state.updatedBy ? '<span class="who">' + escapeHtml(state.updatedBy) + '</span>' : 'system';
+      metaEl.innerHTML = '更新于 ' + fmtTime(state.updatedAt) + ' · by ' + who;
+    }
+
+    function renderHistory(items) {
+      var list = el('history');
+      var badge = el('historyBadge');
+      if (!items || items.length === 0) {
+        list.innerHTML = '<div class="empty-history">暂无事件</div>';
+        badge.textContent = '0';
+        return;
+      }
+      badge.textContent = String(items.length);
+      var html = items.map(function (item) {
+        return '<div class="history-item">' +
+          '<span class="action ' + item.action + '">' + item.action + '</span>' +
+          '<span class="val">' + item.value + '</span>' +
+          '<span class="time">' + fmtTime(item.at) + '</span>' +
+          '</div>';
+      }).join('');
+      list.innerHTML = html;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ===== 操作 =====
+    function doInc() {
+      setButtonsDisabled(true);
+      apiCall('/counter/inc', 'POST').then(function (s) {
+        renderValue(s);
+      }).catch(function (e) {
+        showToast('操作失败: ' + e.message);
+      }).finally(function () {
+        setButtonsDisabled(false);
+        refreshStats();
+      });
+    }
+    function doDec() {
+      setButtonsDisabled(true);
+      apiCall('/counter/dec', 'POST').then(function (s) {
+        renderValue(s);
+      }).catch(function (e) {
+        showToast('操作失败: ' + e.message);
+      }).finally(function () {
+        setButtonsDisabled(false);
+        refreshStats();
+      });
+    }
+    function doReset() {
+      setButtonsDisabled(true);
+      apiCall('/counter/reset', 'POST').then(function (s) {
+        renderValue(s);
+        showToast('已重置');
+      }).catch(function (e) {
+        showToast('操作失败: ' + e.message);
+      }).finally(function () {
+        setButtonsDisabled(false);
+        refreshStats();
+      });
+    }
+
+    function refreshStats() {
+      apiCall('/stats').then(function (stats) {
+        renderHistory(stats.history);
+      }).catch(function () {});
+    }
+
+    function refreshCounter() {
+      apiCall('/counter').then(function (state) {
+        renderValue(state);
+      }).catch(function (e) {
+        el('meta').textContent = '后端未启动（点击按钮启动 Cell）';
+      });
+    }
+
+    // ===== WebSocket =====
+    function connectWS() {
+      try {
+        var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        var wsUrl = proto + '//' + location.host + '/ws';
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = function () {
+          wsConnected = true;
+          setStatus('', '已连接 · 实时同步中');
+          // 订阅本应用的 IPC 通道
+          ws.send(JSON.stringify({ type: 'subscribe', appId: APP_ID, channel: 'counter:update' }));
+        };
+        ws.onmessage = function (evt) {
+          try {
+            var msg = JSON.parse(evt.data);
+            if (msg.type === 'counter:update' && msg.data) {
+              renderValue(msg.data);
+              refreshStats();
+            } else if (msg.type === 'cell-ipc' && msg.channel === 'counter:update') {
+              renderValue(msg.payload);
+              refreshStats();
+            } else if (msg.type === 'cell:stopping') {
+              showToast('后端 Cell 即将停止');
+              setStatus('connecting', '后端停止中...');
+            }
+          } catch (e) { /* ignore malformed */ }
+        };
+        ws.onclose = function () {
+          wsConnected = false;
+          setStatus('disconnected', '连接断开 · 5 秒后重连');
+          setTimeout(connectWS, 5000);
+        };
+        ws.onerror = function () {
+          // 让 onclose 处理重连
+        };
+      } catch (e) {
+        setStatus('disconnected', 'WebSocket 不可用 · 仅 HTTP 模式');
+      }
+    }
+
+    // ===== 启动 Cell（按需） =====
+    function ensureCellStarted() {
+      // 尝试读取 counter；若 404/503 表示 Cell 未启动，触发 start
+      apiCall('/counter').catch(function () {
+        // 调用 start 端点
+        fetch('/api/cell/' + APP_ID + '/start', {
+          method: 'POST',
+          headers: { 'X-User-Id': userId }
+        }).then(function () {
+          setTimeout(function () {
+            refreshCounter();
+            refreshStats();
+          }, 500);
+        }).catch(function () { /* 忽略，可能 Cell 已启动 */ });
+      });
+    }
+
+    // ===== 初始化 =====
+    function init() {
+      setButtonsDisabled(true);
+
+      // 探测 SDK
+      if (sdk && sdk.install) {
+        try { sdk.install({ appId: APP_ID }); } catch (e) {}
+      }
+
+      // 先刷新一次状态
+      refreshCounter();
+      refreshStats();
+
+      // 启动 Cell（如果未启动）
+      ensureCellStarted();
+
+      // 连接 WebSocket
+      connectWS();
+
+      // 1 秒后启用按钮（给后端启动时间）
+      setTimeout(function () {
+        setButtonsDisabled(false);
+        if (lastValue === null) refreshCounter();
+      }, 1000);
+
+      // 每 10 秒刷新一次历史（兜底）
+      setInterval(refreshStats, 10000);
+    }
+
+    // 兼容旧浏览器
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>

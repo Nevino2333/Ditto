@@ -66,7 +66,7 @@ export class DittoKernel {
     try {
       await this.lifecycle.init(this);
 
-      // 创建 cellManager（如果未创建）
+      // cellManager 由 cells stage 创建；若 stage 未提供则在此兜底创建
       if (!(this.cellManager as unknown as AppCellManager)?.getAllCells) {
         const container = this.containerEl ?? document.body;
         (this as any).cellManager = new AppCellManager(this.ipc, this.permissions, container);
@@ -138,7 +138,7 @@ export class DittoKernel {
       },
     });
 
-    // services stage（阶段 2 注册更多服务）
+    // services stage：注册 events 和 store 服务（更多服务由 shell 通过 registerKernelServices 注入）
     this.lifecycle.onStage('services', {
       onInit: () => {
         this.services.register('events', () => this.events);

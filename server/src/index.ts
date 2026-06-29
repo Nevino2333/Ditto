@@ -74,8 +74,15 @@ const appsDir = process.env.APPS_DIR ?? path.join(process.cwd(), 'data', 'apps')
 fs.mkdirSync(appsDir, { recursive: true });
 
 app.use('*', logger());
+
+// CORS：默认允许同源（origin: '*')，生产环境可通过 DITTO_CORS_ORIGIN 收紧为白名单
+// 例：DITTO_CORS_ORIGIN=https://app.ditto.dev,https://shop.ditto.dev
+const corsOriginEnv = process.env.DITTO_CORS_ORIGIN;
+const corsOrigin = corsOriginEnv
+  ? corsOriginEnv.split(',').map(s => s.trim()).filter(Boolean)
+  : '*';
 app.use('*', cors({
-  origin: '*',
+  origin: corsOrigin,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'X-Filename', 'X-Decrypt-Password'],
   exposeHeaders: ['X-RateLimit-Limit', 'X-Quota-Usage', 'Retry-After'],
@@ -99,7 +106,7 @@ app.get('/', (c) => c.json({
 
 app.route('/api/auth', createAuthRoutes());
 app.route('/api/vfs', vfsRoutes);
-app.route('/api/apps', appRegistryRoutes);
+app.route('/api/app-registry', appRegistryRoutes);
 app.route('/api/proxy', proxyRoutes);
 
 app.route('/api/cell', createCellRoutes({
