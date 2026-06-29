@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { usePowerStore } from '@ditto/services';
 import { getThemeEngine } from '@ditto/theme';
+import { DIcon } from '../DIcon';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
@@ -81,9 +82,7 @@ function onPower(action: 'sleep' | 'shutdown' | 'restart' | 'logout' | 'lock') {
         <header class="d-cc__header">
           <span class="d-cc__title">控制中心</span>
           <button class="d-cc__btn d-cc__btn--close" @click="onOverlayClick" title="关闭" aria-label="关闭控制中心">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
+            <DIcon name="fa-solid fa-xmark" />
           </button>
         </header>
 
@@ -96,7 +95,7 @@ function onPower(action: 'sleep' | 'shutdown' | 'restart' | 'logout' | 'lock') {
               @click="setScheme('light')"
               title="浅色模式"
             >
-              <span class="d-cc__tile-icon">☀️</span>
+              <DIcon name="fa-solid fa-sun" class="d-cc__tile-icon" />
               <span class="d-cc__tile-label">浅色</span>
             </button>
             <button
@@ -105,7 +104,7 @@ function onPower(action: 'sleep' | 'shutdown' | 'restart' | 'logout' | 'lock') {
               @click="setScheme('dark')"
               title="深色模式"
             >
-              <span class="d-cc__tile-icon">🌙</span>
+              <DIcon name="fa-solid fa-moon" class="d-cc__tile-icon" />
               <span class="d-cc__tile-label">深色</span>
             </button>
             <button
@@ -114,7 +113,7 @@ function onPower(action: 'sleep' | 'shutdown' | 'restart' | 'logout' | 'lock') {
               @click="toggleDnd"
               :title="dnd ? '关闭勿扰' : '开启勿扰'"
             >
-              <span class="d-cc__tile-icon">🌙</span>
+              <DIcon name="fa-solid fa-bell-slash" class="d-cc__tile-icon" />
               <span class="d-cc__tile-label">勿扰</span>
             </button>
           </section>
@@ -122,7 +121,7 @@ function onPower(action: 'sleep' | 'shutdown' | 'restart' | 'logout' | 'lock') {
           <!-- 滑块组：亮度、音量 -->
           <section class="d-cc__sliders">
             <div class="d-cc__slider-row">
-              <span class="d-cc__slider-icon" aria-hidden="true">🔆</span>
+              <DIcon name="fa-solid fa-sun" class="d-cc__slider-icon" />
               <input
                 v-model.number="brightness"
                 type="range"
@@ -135,7 +134,7 @@ function onPower(action: 'sleep' | 'shutdown' | 'restart' | 'logout' | 'lock') {
               <span class="d-cc__slider-value">{{ brightness }}</span>
             </div>
             <div class="d-cc__slider-row">
-              <span class="d-cc__slider-icon" aria-hidden="true">🔊</span>
+              <DIcon name="fa-solid fa-volume-high" class="d-cc__slider-icon" />
               <input
                 v-model.number="volume"
                 type="range"
@@ -152,23 +151,23 @@ function onPower(action: 'sleep' | 'shutdown' | 'restart' | 'logout' | 'lock') {
           <!-- 电源按钮区 -->
           <section class="d-cc__power">
             <button class="d-cc__power-btn" @click="onPower('lock')" title="锁屏">
-              <span class="d-cc__power-icon">🔒</span>
+              <DIcon name="fa-solid fa-lock" class="d-cc__power-icon" />
               <span class="d-cc__power-label">锁屏</span>
             </button>
             <button class="d-cc__power-btn" @click="onPower('sleep')" title="睡眠">
-              <span class="d-cc__power-icon">💤</span>
+              <DIcon name="fa-solid fa-moon" class="d-cc__power-icon" />
               <span class="d-cc__power-label">睡眠</span>
             </button>
             <button class="d-cc__power-btn" @click="onPower('logout')" title="注销">
-              <span class="d-cc__power-icon">🚪</span>
+              <DIcon name="fa-solid fa-arrow-right-from-bracket" class="d-cc__power-icon" />
               <span class="d-cc__power-label">注销</span>
             </button>
             <button class="d-cc__power-btn" @click="onPower('restart')" title="重启">
-              <span class="d-cc__power-icon">🔄</span>
+              <DIcon name="fa-solid fa-rotate" class="d-cc__power-icon" />
               <span class="d-cc__power-label">重启</span>
             </button>
             <button class="d-cc__power-btn d-cc__power-btn--danger" @click="onPower('shutdown')" title="关机">
-              <span class="d-cc__power-icon">⏻</span>
+              <DIcon name="fa-solid fa-power-off" class="d-cc__power-icon" />
               <span class="d-cc__power-label">关机</span>
             </button>
           </section>

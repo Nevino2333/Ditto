@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useNotificationStore } from '@ditto/services';
+import { DIcon } from '../DIcon';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
@@ -58,26 +59,20 @@ function onClearAll() {
           </div>
           <div class="d-nc__actions">
             <button class="d-nc__btn" @click="onMarkAllRead" title="全部已读" aria-label="全部标记为已读">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <DIcon name="fa-solid fa-check" />
             </button>
             <button class="d-nc__btn" @click="onClearAll" title="清空全部" aria-label="清空所有通知">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-              </svg>
+              <DIcon name="fa-solid fa-trash" />
             </button>
             <button class="d-nc__btn d-nc__btn--close" @click="onOverlayClick" title="关闭" aria-label="关闭通知中心">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-              </svg>
+              <DIcon name="fa-solid fa-xmark" />
             </button>
           </div>
         </header>
 
         <div class="d-nc__list">
           <div v-if="recent.length === 0" class="d-nc__empty">
-            <span class="d-nc__empty-icon">🔔</span>
+            <DIcon name="fa-solid fa-bell-slash" class="d-nc__empty-icon" />
             <span class="d-nc__empty-text">暂无通知</span>
           </div>
           <article
@@ -87,7 +82,7 @@ function onClearAll() {
             :class="{ 'd-nc__item--unread': !n.read, ['d-nc__item--' + (n.type || 'info')]: true }"
             @click="onNotificationClick(n.id)"
           >
-            <span v-if="n.icon" class="d-nc__item-icon">{{ n.icon }}</span>
+            <DIcon v-if="n.icon" :name="n.icon" class="d-nc__item-icon" />
             <div v-else class="d-nc__item-icon d-nc__item-icon--fallback">{{ (n.source || 'i').charAt(0).toUpperCase() }}</div>
             <div class="d-nc__item-body">
               <div class="d-nc__item-header">

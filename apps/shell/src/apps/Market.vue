@@ -2,7 +2,7 @@
   <div class="market">
     <aside class="market__sidebar">
       <div class="market__sidebar-header">
-        <span class="market__logo">🦎</span>
+        <DIcon name="fa-solid fa-bag-shopping" class="market__logo" />
         <span class="market__title">Ditto Market</span>
       </div>
       <nav class="market__nav">
@@ -12,7 +12,7 @@
           :class="['market__nav-item', { 'market__nav-item--active': isNavActive(item) }]"
           @click="handleNav(item)"
         >
-          <span class="market__nav-icon">{{ item.icon }}</span>
+          <DIcon :name="item.icon" class="market__nav-icon" />
           <span class="market__nav-label">{{ item.label }}</span>
           <span v-if="item.view === 'updates' && store.updatesAvailable.length" class="market__nav-badge">
             {{ store.updatesAvailable.length }}
@@ -31,20 +31,24 @@
       </div>
 
       <div v-else-if="store.error && store.currentView !== 'detail'" class="market__error">
-        <span>❌ {{ store.error }}</span>
+        <DIcon name="fa-solid fa-circle-xmark" class="market__error-icon" />
+        <span>{{ store.error }}</span>
         <button class="m-btn m-btn--primary" @click="retry">重试</button>
       </div>
 
       <template v-else-if="store.currentView === 'home'">
         <div class="market__search-bar">
-          <input
-            type="text"
-            class="m-search"
-            placeholder="搜索应用..."
-            :value="store.searchQuery"
-            @input="store.setSearch(sanitizeInput(($event.target as HTMLInputElement).value))"
-            @keyup.enter="goSearch"
-          />
+          <div class="m-search-wrap">
+            <DIcon name="fa-solid fa-magnifying-glass" class="m-search__icon" />
+            <input
+              type="text"
+              class="m-search"
+              placeholder="搜索应用..."
+              :value="store.searchQuery"
+              @input="store.setSearch(sanitizeInput(($event.target as HTMLInputElement).value))"
+              @keyup.enter="goSearch"
+            />
+          </div>
         </div>
 
         <section v-if="store.featured?.banner?.length" class="market__section">
@@ -74,7 +78,9 @@
         </section>
 
         <section v-if="store.featured?.editorsChoice?.length" class="market__section">
-          <h3 class="market__section-title">✨ 编辑精选</h3>
+          <h3 class="market__section-title">
+            <DIcon name="fa-solid fa-wand-magic-sparkles" /> 编辑精选
+          </h3>
           <div class="market__card-row">
             <div
               v-for="appId in store.featured!.editorsChoice.slice(0, 6)"
@@ -82,7 +88,9 @@
               class="m-card"
               @click="goToDetail(appId)"
             >
-              <div class="m-card__icon">{{ getAppEntry(appId)?.manifest.icon ?? '📦' }}</div>
+              <div class="m-card__icon">
+                <DIcon :name="getAppEntry(appId)?.manifest.icon || 'fa-solid fa-box'" />
+              </div>
               <div class="m-card__info">
                 <div class="m-card__name">{{ getAppEntry(appId)?.manifest.name ?? appId }}</div>
                 <div class="m-card__summary">{{ getAppEntry(appId)?.market.summary ?? '' }}</div>
@@ -103,7 +111,9 @@
         </section>
 
         <section v-if="store.featured?.newApps?.length" class="market__section">
-          <h3 class="market__section-title">🆕 新上架</h3>
+          <h3 class="market__section-title">
+            <DIcon name="fa-solid fa-arrow-trend-up" /> 新上架
+          </h3>
           <div class="market__card-row">
             <div
               v-for="appId in store.featured!.newApps.slice(0, 6)"
@@ -111,7 +121,9 @@
               class="m-card"
               @click="goToDetail(appId)"
             >
-              <div class="m-card__icon">{{ getAppEntry(appId)?.manifest.icon ?? '📦' }}</div>
+              <div class="m-card__icon">
+                <DIcon :name="getAppEntry(appId)?.manifest.icon || 'fa-solid fa-box'" />
+              </div>
               <div class="m-card__info">
                 <div class="m-card__name">{{ getAppEntry(appId)?.manifest.name ?? appId }}</div>
                 <div class="m-card__summary">{{ getAppEntry(appId)?.market.summary ?? '' }}</div>
@@ -122,7 +134,9 @@
         </section>
 
         <section v-if="store.featured?.topRated?.length" class="market__section">
-          <h3 class="market__section-title">⭐ 最高评分</h3>
+          <h3 class="market__section-title">
+            <DIcon name="fa-solid fa-star" /> 最高评分
+          </h3>
           <div class="market__card-row">
             <div
               v-for="appId in store.featured!.topRated.slice(0, 6)"
@@ -130,7 +144,9 @@
               class="m-card"
               @click="goToDetail(appId)"
             >
-              <div class="m-card__icon">{{ getAppEntry(appId)?.manifest.icon ?? '📦' }}</div>
+              <div class="m-card__icon">
+                <DIcon :name="getAppEntry(appId)?.manifest.icon || 'fa-solid fa-box'" />
+              </div>
               <div class="m-card__info">
                 <div class="m-card__name">{{ getAppEntry(appId)?.manifest.name ?? appId }}</div>
                 <div class="m-card__meta">
@@ -142,7 +158,9 @@
         </section>
 
         <section class="market__section">
-          <h3 class="market__section-title">📂 浏览分类</h3>
+          <h3 class="market__section-title">
+            <DIcon name="fa-solid fa-folder-tree" /> 浏览分类
+          </h3>
           <div class="market__category-grid">
             <button
               v-for="cat in store.categories"
@@ -150,7 +168,7 @@
               class="market__category-card"
               @click="browseCategory(cat.id)"
             >
-              <span class="market__category-icon">{{ cat.icon }}</span>
+              <DIcon :name="getCategoryIcon(cat.id)" class="market__category-icon" />
               <span class="market__category-name">{{ cat.name }}</span>
             </button>
           </div>
@@ -158,7 +176,7 @@
 
         <section class="market__section market__section--cta">
           <div class="market__cta">
-            <span class="market__cta-icon">🚀</span>
+            <DIcon name="fa-solid fa-rocket" class="market__cta-icon" />
             <div class="market__cta-text">
               <h3>探索更多应用</h3>
               <p>浏览全部 {{ store.appList.length }} 款应用</p>
@@ -170,14 +188,17 @@
 
       <template v-else-if="store.currentView === 'apps'">
         <div class="market__toolbar">
-          <input
-            type="text"
-            class="m-search"
-            placeholder="搜索应用..."
-            :value="store.searchQuery"
-            @input="store.setSearch(sanitizeInput(($event.target as HTMLInputElement).value))"
-            @keyup.enter="store.fetchApps()"
-          />
+          <div class="m-search-wrap">
+            <DIcon name="fa-solid fa-magnifying-glass" class="m-search__icon" />
+            <input
+              type="text"
+              class="m-search"
+              placeholder="搜索应用..."
+              :value="store.searchQuery"
+              @input="store.setSearch(sanitizeInput(($event.target as HTMLInputElement).value))"
+              @keyup.enter="store.fetchApps()"
+            />
+          </div>
           <div class="market__sort">
             <button
               v-for="s in sortOptions"
@@ -197,7 +218,9 @@
             :key="cat.id"
             :class="['m-tag', { 'm-tag--active': store.selectedCategory === cat.id }]"
             @click="store.setCategory(cat.id)"
-          >{{ cat.icon }} {{ cat.name }}</button>
+          >
+            <DIcon :name="getCategoryIcon(cat.id)" /> {{ cat.name }}
+          </button>
         </div>
         <div class="market__grid">
           <div
@@ -206,7 +229,9 @@
             class="m-card"
             @click="goToDetail(app.id)"
           >
-            <div class="m-card__icon">{{ app.manifest.icon ?? '📦' }}</div>
+            <div class="m-card__icon">
+              <DIcon :name="app.manifest.icon || 'fa-solid fa-box'" />
+            </div>
             <div class="m-card__info">
               <div class="m-card__name">{{ app.manifest.name }}</div>
               <div class="m-card__summary">{{ app.market.summary }}</div>
@@ -227,26 +252,33 @@
           </div>
         </div>
         <div v-if="!store.filteredApps.length && !store.loading" class="market__empty">
-          <span>🔍 没有找到匹配的应用</span>
+          <DIcon name="fa-solid fa-magnifying-glass" class="market__empty-icon" />
+          <span>没有找到匹配的应用</span>
         </div>
       </template>
 
       <template v-else-if="store.currentView === 'detail' && store.selectedApp">
-        <button class="m-btn m-btn--ghost" @click="goBack">← 返回</button>
+        <button class="m-btn m-btn--ghost" @click="goBack">
+          <DIcon name="fa-solid fa-arrow-left" /> 返回
+        </button>
         <div v-if="store.error" class="market__toast">
-          <span>⚠️ {{ store.error }}</span>
-          <button class="m-btn m-btn--ghost m-btn--sm" @click="store.error = null">✕</button>
+          <span><DIcon name="fa-solid fa-triangle-exclamation" /> {{ store.error }}</span>
+          <button class="m-btn m-btn--ghost m-btn--sm" @click="store.error = null">
+            <DIcon name="fa-solid fa-xmark" />
+          </button>
         </div>
         <div class="market__detail">
           <div class="market__detail-header">
-            <div class="market__detail-icon">{{ store.selectedApp.manifest.icon ?? '📦' }}</div>
+            <div class="market__detail-icon">
+              <DIcon :name="store.selectedApp.manifest.icon || 'fa-solid fa-box'" />
+            </div>
             <div class="market__detail-info">
               <h2>{{ store.selectedApp.manifest.name }}</h2>
               <p class="market__detail-publisher">{{ store.selectedApp.market.publisher }}</p>
               <div class="market__detail-meta">
                 <m-rating :value="store.selectedApp.rating" />
                 <span>{{ store.selectedApp.rating.toFixed(1) }} ({{ store.selectedApp.ratingCount }} 评分)</span>
-                <span>📥 {{ store.selectedApp.downloads }} 下载</span>
+                <span><DIcon name="fa-solid fa-download" /> {{ store.selectedApp.downloads }}</span>
                 <span>v{{ store.selectedApp.manifest.version }}</span>
               </div>
             </div>
@@ -256,6 +288,7 @@
               @click="handleAppAction(store.selectedApp.id)"
               :disabled="store.installingAppId === store.selectedApp.id"
             >
+              <DIcon v-if="store.installingAppId === store.selectedApp.id" name="fa-solid fa-spinner" class="fa-spin" />
               {{ store.installingAppId === store.selectedApp.id ? getInstallingLabel(store.selectedApp.id) : getActionLabel(store.selectedApp.id) }}
             </button>
           </div>
@@ -278,6 +311,22 @@
               <div class="market__description" v-html="renderMarkdown(store.selectedApp.market.description)"></div>
             </div>
 
+            <!-- 权限展示区块（新增） -->
+            <div class="market__detail-section">
+              <h3>
+                <DIcon name="fa-solid fa-shield-halved" /> 权限申请
+              </h3>
+              <div v-if="selectedAppPermissions.length" class="market__perm-list">
+                <div v-for="perm in selectedAppPermissions" :key="perm" class="market__perm-item">
+                  <DIcon :name="getPermissionLabel(perm).icon" class="market__perm-icon" />
+                  <span class="market__perm-label">{{ getPermissionLabel(perm).label }}</span>
+                </div>
+              </div>
+              <div v-else class="market__perm-empty">
+                <DIcon name="fa-solid fa-check" /> 该应用未申请任何权限
+              </div>
+            </div>
+
             <div v-if="store.selectedApp.market.tags?.length" class="market__detail-section">
               <h3>标签</h3>
               <div class="market__tags">
@@ -289,7 +338,7 @@
               <h3>评分分布</h3>
               <div class="market__rating-dist">
                 <div v-for="star in [5,4,3,2,1]" :key="star" class="market__rating-bar">
-                  <span class="market__rating-bar-label">{{ star }} ★</span>
+                  <span class="market__rating-bar-label">{{ star }} <DIcon name="fa-solid fa-star" class="market__rating-star" /></span>
                   <div class="market__rating-bar-track">
                     <div
                       class="market__rating-bar-fill"
@@ -307,7 +356,7 @@
               <div class="market__review-form">
                 <div class="market__review-form-row">
                   <m-rating :value="reviewForm.rating" :interactive="true" @rate="(r: number) => reviewForm.rating = r" />
-                  <span class="market__review-form-hint">{{ reviewForm.rating > 0 ? '⭐'.repeat(reviewForm.rating) : '点击评分' }}</span>
+                  <span class="market__review-form-hint">{{ reviewForm.rating > 0 ? '★'.repeat(reviewForm.rating) : '点击评分' }}</span>
                 </div>
                 <textarea
                   class="market__review-textarea"
@@ -344,10 +393,14 @@
       </template>
 
       <template v-else-if="store.currentView === 'installed'">
-        <h2 class="market__page-title">📦 已安装应用</h2>
+        <h2 class="market__page-title">
+          <DIcon name="fa-solid fa-box-archive" /> 已安装应用
+        </h2>
         <div v-if="store.installedApps.length" class="market__list">
           <div v-for="app in store.installedApps" :key="app.appId" class="m-card m-card--horizontal">
-            <div class="m-card__icon">{{ app.icon ?? '📦' }}</div>
+            <div class="m-card__icon">
+              <DIcon :name="app.icon || 'fa-solid fa-box'" />
+            </div>
             <div class="m-card__info">
               <div class="m-card__name">{{ app.appName }}</div>
               <div class="m-card__meta">v{{ app.installedVersion }}</div>
@@ -359,18 +412,25 @@
             </div>
           </div>
         </div>
-        <div v-else class="market__empty">还没有安装任何应用</div>
+        <div v-else class="market__empty">
+          <DIcon name="fa-solid fa-box-open" class="market__empty-icon" />
+          <span>还没有安装任何应用</span>
+        </div>
       </template>
 
       <template v-else-if="store.currentView === 'updates'">
-        <h2 class="market__page-title">⬆️ 可用更新</h2>
+        <h2 class="market__page-title">
+          <DIcon name="fa-solid fa-arrow-up" /> 可用更新
+        </h2>
         <div v-if="store.updatesAvailable.length" class="market__list">
           <div class="market__update-header">
             <span>{{ store.updatesAvailable.length }} 个应用有更新</span>
             <button class="m-btn m-btn--primary m-btn--sm" @click="updateAll">全部更新</button>
           </div>
           <div v-for="update in store.updatesAvailable" :key="update.appId" class="m-card m-card--horizontal">
-            <div class="m-card__icon">{{ update.icon ?? '📦' }}</div>
+            <div class="m-card__icon">
+              <DIcon :name="update.icon || 'fa-solid fa-box'" />
+            </div>
             <div class="m-card__info">
               <div class="m-card__name">{{ update.appName }}</div>
               <div class="m-card__meta">
@@ -385,15 +445,21 @@
               :disabled="store.installingAppId === update.appId"
               @click="handleInstall(update.appId)"
             >
+              <DIcon v-if="store.installingAppId === update.appId" name="fa-solid fa-spinner" class="fa-spin" />
               {{ store.installingAppId === update.appId ? '更新中...' : '更新' }}
             </button>
           </div>
         </div>
-        <div v-else class="market__empty">所有应用已是最新版本 ✅</div>
+        <div v-else class="market__empty">
+          <DIcon name="fa-solid fa-circle-check" class="market__empty-icon" />
+          <span>所有应用已是最新版本</span>
+        </div>
       </template>
 
       <template v-else-if="store.currentView === 'publish'">
-        <h2 class="market__page-title">📋 发布应用到 Ditto Market</h2>
+        <h2 class="market__page-title">
+          <DIcon name="fa-solid fa-upload" /> 发布应用到 Ditto Market
+        </h2>
         <div class="market__publish-guide">
           <div class="market__publish-step">
             <div class="market__publish-step-num">1</div>
@@ -437,9 +503,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive } from 'vue';
+import { onMounted, ref, reactive, computed } from 'vue';
 import { useMarketStore } from '../stores/market';
 import { useAppStore } from '@ditto/services';
+import { DIcon } from '@ditto/ui';
 
 const store = useMarketStore();
 const appStore = useAppStore();
@@ -452,15 +519,38 @@ const reviewForm = reactive({ rating: 0, comment: '' });
 const previousView = ref<string>('home');
 
 const navItems = [
-  { view: 'home' as const, icon: '🏠', label: '首页', category: null as string | null },
-  { view: 'apps' as const, icon: '📱', label: '应用', category: null as string | null },
-  { view: 'apps' as const, icon: '🔌', label: '插件', category: 'plugin' as string | null },
-  { view: 'apps' as const, icon: '🎨', label: '主题', category: 'theme' as string | null },
-  { view: 'apps' as const, icon: '📱', label: '小组件', category: 'widget' as string | null },
-  { view: 'installed' as const, icon: '📦', label: '已安装', category: null as string | null },
-  { view: 'updates' as const, icon: '⬆️', label: '更新', category: null as string | null },
-  { view: 'publish' as const, icon: '📋', label: '发布', category: null as string | null },
+  { view: 'home' as const, icon: 'fa-solid fa-house', label: '首页', category: null as string | null },
+  { view: 'apps' as const, icon: 'fa-solid fa-grip', label: '应用', category: null as string | null },
+  { view: 'apps' as const, icon: 'fa-solid fa-plug', label: '插件', category: 'plugin' as string | null },
+  { view: 'apps' as const, icon: 'fa-solid fa-palette', label: '主题', category: 'theme' as string | null },
+  { view: 'apps' as const, icon: 'fa-solid fa-shapes', label: '小组件', category: 'widget' as string | null },
+  { view: 'installed' as const, icon: 'fa-solid fa-box-archive', label: '已安装', category: null as string | null },
+  { view: 'updates' as const, icon: 'fa-solid fa-arrow-up', label: '更新', category: null as string | null },
+  { view: 'publish' as const, icon: 'fa-solid fa-upload', label: '发布', category: null as string | null },
 ];
+
+// 权限名称映射（与 Settings.vue 保持一致）
+const PERMISSION_LABELS: Record<string, { label: string; icon: string }> = {
+  'fs.read': { label: '读取文件', icon: 'fa-solid fa-folder-open' },
+  'fs.write': { label: '写入文件', icon: 'fa-solid fa-floppy-disk' },
+  'net.request': { label: '网络请求', icon: 'fa-solid fa-network-wired' },
+  'clipboard.read': { label: '读取剪贴板', icon: 'fa-solid fa-paste' },
+  'clipboard.write': { label: '写入剪贴板', icon: 'fa-solid fa-clipboard' },
+  'notification': { label: '发送通知', icon: 'fa-solid fa-bell' },
+  'geolocation': { label: '获取位置', icon: 'fa-solid fa-location-dot' },
+  'camera': { label: '访问摄像头', icon: 'fa-solid fa-camera' },
+  'microphone': { label: '访问麦克风', icon: 'fa-solid fa-microphone' },
+  'storage': { label: '本地存储', icon: 'fa-solid fa-database' },
+};
+
+function getPermissionLabel(cap: string): { label: string; icon: string } {
+  return PERMISSION_LABELS[cap] || { label: cap, icon: 'fa-solid fa-shield-halved' };
+}
+
+// 当前选中应用的权限列表（详情页用）
+const selectedAppPermissions = computed<string[]>(() => {
+  return store.selectedApp?.manifest.permissions ?? [];
+});
 
 const sortOptions = [
   { value: 'newest' as const, label: '最新' },
@@ -538,6 +628,30 @@ function getAppEntry(appId: string) {
 function getCategoryName(categoryId: string): string {
   const cat = store.categories.find(c => c.id === categoryId);
   return cat ? cat.name : categoryId;
+}
+
+// 分类图标映射（emoji → FontAwesome class）
+const CATEGORY_ICONS: Record<string, string> = {
+  utility: 'fa-solid fa-toolbox',
+  productivity: 'fa-solid fa-briefcase',
+  entertainment: 'fa-solid fa-gamepad',
+  social: 'fa-solid fa-comments',
+  education: 'fa-solid fa-graduation-cap',
+  news: 'fa-solid fa-newspaper',
+  finance: 'fa-solid fa-chart-line',
+  health: 'fa-solid fa-heart-pulse',
+  lifestyle: 'fa-solid fa-mug-saucer',
+  media: 'fa-solid fa-photo-film',
+  development: 'fa-solid fa-code',
+  system: 'fa-solid fa-gear',
+  game: 'fa-solid fa-gamepad',
+  plugin: 'fa-solid fa-plug',
+  theme: 'fa-solid fa-palette',
+  widget: 'fa-solid fa-shapes',
+};
+
+function getCategoryIcon(categoryId: string): string {
+  return CATEGORY_ICONS[categoryId] || 'fa-solid fa-tag';
 }
 
 function sanitizeInput(input: string): string {
@@ -872,10 +986,27 @@ export default { components: { MRating, MBadge } };
 
 .market__search-bar { margin-bottom: 24px; }
 
+/* 搜索框包装：内嵌放大镜图标 */
+.m-search-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.m-search__icon {
+  position: absolute;
+  left: 14px;
+  font-size: 14px;
+  color: var(--ditto-color-text-disabled, #999);
+  pointer-events: none;
+}
+
 .m-search {
   width: 100%;
   max-width: 500px;
-  padding: 10px 16px;
+  padding: 10px 16px 10px 40px;
   border: 1px solid var(--ditto-color-border-subtle, #e5e5e5);
   border-radius: 10px;
   font-size: 14px;
@@ -883,13 +1014,87 @@ export default { components: { MRating, MBadge } };
   color: var(--ditto-color-text-primary, #1a1a2e);
   outline: none;
   transition: border-color 0.15s;
+  box-sizing: border-box;
 }
 
 .m-search:focus { border-color: var(--ditto-color-primary-500, #0078d4); }
 .m-search::placeholder { color: var(--ditto-color-text-disabled, #999); }
 
 .market__section { margin-bottom: 32px; }
-.market__section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.market__section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+}
+.market__section-title > :first-child {
+  margin-right: 8px;
+  color: var(--ditto-color-primary-500, #0078d4);
+}
+
+/* 详情页：权限清单 */
+.market__perm-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.market__perm-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--ditto-color-surface-overlay, #f0f7ff);
+  border: 1px solid var(--ditto-color-primary-200, #bfdbfe);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--ditto-color-text-secondary, #475569);
+}
+
+.market__perm-icon {
+  margin-right: 6px;
+  color: var(--ditto-color-primary-500, #0078d4);
+}
+
+.market__perm-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ditto-color-text-disabled, #999);
+  padding: 8px 12px;
+  background: var(--ditto-color-surface-overlay, #f8fafc);
+  border-radius: 8px;
+}
+
+/* 评分条中的小星星 */
+.market__rating-star {
+  font-size: 10px;
+  color: #ffc107;
+}
+
+/* 错误/空状态图标 */
+.market__error-icon {
+  font-size: 32px;
+  color: var(--ditto-color-semantic-error, #e53935);
+}
+
+.market__empty-icon {
+  font-size: 32px;
+  display: block;
+  margin: 0 auto 8px;
+  color: var(--ditto-color-text-disabled, #ccc);
+}
+
+/* 安装/更新中加载图标旋转动画 */
+:deep(.fa-spin) {
+  animation: fa-spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes fa-spin {
+  to { transform: rotate(360deg); }
+}
 
 .market__carousel {
   position: relative;

@@ -11,9 +11,10 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@ditto/shared": "workspace:*",
     "@ditto/services": "workspace:*",
+    "@ditto/shared": "workspace:*",
     "@ditto/theme": "workspace:*",
+    "@fortawesome/fontawesome-free": "^7.3.0",
     "vue": "^3.5.0"
   },
   "devDependencies": {

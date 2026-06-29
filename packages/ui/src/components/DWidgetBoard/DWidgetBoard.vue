@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useWidgetStore } from '@ditto/services';
+import { DIcon } from '../DIcon';
 
 const widgetStore = useWidgetStore();
 const instances = computed(() => widgetStore.runningInstances);
@@ -34,12 +35,12 @@ function onRemove(instanceId: string) {
       <div class="d-widget__body">
         <slot :instance="inst" :widgetId="inst.widgetId">
           <div class="d-widget__placeholder">
-            <span>{{ inst.manifest.icon || '📋' }}</span>
+            <DIcon :name="inst.manifest.icon || 'fa-solid fa-clipboard'" />
             <span>{{ inst.manifest.name }}</span>
           </div>
         </slot>
       </div>
-      <button class="d-widget__close" title="移除小组件" aria-label="移除小组件" @click.stop="onRemove(inst.id)">×</button>
+      <button class="d-widget__close" title="移除小组件" aria-label="移除小组件" @click.stop="onRemove(inst.id)"><DIcon name="fa-solid fa-xmark" /></button>
     </div>
     </TransitionGroup>
   </div>

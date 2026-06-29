@@ -2,6 +2,7 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import { useWindowStore, useAppStore } from '@ditto/services';
 import type { WindowState } from '@ditto/shared';
+import { DIcon } from '../DIcon';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
@@ -157,7 +158,7 @@ function onKeydown(event: KeyboardEvent) {
               @click="onThumbnailClick(item.window.id)"
             >
               <div class="d-task-switcher__thumb">
-                <span class="d-task-switcher__icon">{{ item.window.icon || '🪟' }}</span>
+                <DIcon :name="item.window.icon || 'fa-solid fa-window-restore'" class="d-task-switcher__icon" />
               </div>
               <div class="d-task-switcher__meta">
                 <span class="d-task-switcher__name">{{ item.window.title }}</span>

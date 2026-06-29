@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useWindowStore, useAppStore } from '@ditto/services';
 import type { AppManifest } from '@ditto/shared';
+import { DIcon } from '../DIcon';
 
 const windowStore = useWindowStore();
 const appStore = useAppStore();
@@ -49,7 +50,7 @@ function onAppClick(app: AppManifest) {
         :title="app.name"
         :aria-label="`${app.name}${appStore.runningAppIds.includes(app.id) ? '（运行中）' : ''}`"
       >
-        <span class="d-taskbar__app-icon">{{ app.icon || '📦' }}</span>
+        <DIcon :name="app.icon || 'fa-solid fa-box'" class="d-taskbar__app-icon" />
       </button>
     </div>
     <div class="d-taskbar__tray">

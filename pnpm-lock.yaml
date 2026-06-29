@@ -166,6 +166,9 @@ importers:
       '@ditto/theme':
         specifier: workspace:*
         version: link:../theme
+      '@fortawesome/fontawesome-free':
+        specifier: ^7.3.0
+        version: 7.3.0
       vue:
         specifier: ^3.5.0
         version: 3.5.33(typescript@5.9.3)
@@ -1016,6 +1019,10 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fortawesome/fontawesome-free@7.3.0':
+    resolution: {integrity: sha512-Yw4Qa43P6e4Xwh0TwEUkHQNRJInWaqIBo73VJmns3j2AIlZPAvUcR4yGIxCPqPRCgyJ5KIVIalF/I1GxhZ/Kgw==}
+    engines: {node: '>=6'}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -3768,6 +3775,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.27.7':
     optional: true
+
+  '@fortawesome/fontawesome-free@7.3.0': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:

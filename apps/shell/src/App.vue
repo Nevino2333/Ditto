@@ -2,7 +2,7 @@
 import { ref, computed, watch, defineAsyncComponent, onMounted, onUnmounted } from 'vue';
 import {
   DDesktop, DTaskbar, DWindow, DStartMenu, DContextMenu, DNotification, DDialog, DWidgetBoard,
-  DNotificationCenter, DControlCenter, DLockScreen, DTaskSwitcher, DGlobalSearch, DCalendarPanel,
+  DNotificationCenter, DControlCenter, DLockScreen, DTaskSwitcher, DGlobalSearch, DCalendarPanel, DIcon,
 } from '@ditto/ui';
 import {
   useWindowStore, useAppStore, useNotificationStore, useDialogStore, useWidgetStore,
@@ -208,7 +208,7 @@ onMounted(() => {
     id: 'system:lock-screen',
     title: '锁屏',
     description: '锁定当前会话',
-    icon: '🔒',
+    icon: 'fa-solid fa-lock',
     keywords: ['lock', '锁屏', '锁定'],
     action: () => powerStore.lock(),
   });
@@ -216,7 +216,7 @@ onMounted(() => {
     id: 'system:toggle-theme',
     title: '切换主题',
     description: '在浅色与深色主题间切换',
-    icon: '🎨',
+    icon: 'fa-solid fa-palette',
     keywords: ['theme', 'dark', 'light', '主题', '深色', '浅色'],
     action: () => themeEngine.toggleColorScheme(),
   });
@@ -517,17 +517,17 @@ function onDesktopContextMenu(e: MouseEvent) {
     x: e.clientX,
     y: e.clientY,
     items: [
-      { label: '刷新桌面', icon: '🔄', action: () => {} },
+      { label: '刷新桌面', icon: 'fa-solid fa-rotate', action: () => {} },
       { divider: true, label: '' },
-      { label: '终端', icon: '💻', action: () => launchApp('com.ditto.terminal') },
-      { label: '文本编辑器', icon: '📝', action: () => launchApp('com.ditto.editor') },
-      { label: '文件管理器', icon: '📁', action: () => launchApp('com.ditto.files') },
-      { label: '系统监视器', icon: '📊', action: () => launchApp('com.ditto.monitor') },
-      { label: '聊天室', icon: '💬', action: () => launchApp('com.ditto.chat') },
-      { label: '资源仓库', icon: '📦', action: () => launchApp('com.ditto.resources') },
+      { label: '终端', icon: 'fa-solid fa-terminal', action: () => launchApp('com.ditto.terminal') },
+      { label: '文本编辑器', icon: 'fa-solid fa-file-lines', action: () => launchApp('com.ditto.editor') },
+      { label: '文件管理器', icon: 'fa-solid fa-folder', action: () => launchApp('com.ditto.files') },
+      { label: '系统监视器', icon: 'fa-solid fa-gauge-high', action: () => launchApp('com.ditto.monitor') },
+      { label: '聊天室', icon: 'fa-solid fa-comments', action: () => launchApp('com.ditto.chat') },
+      { label: '资源仓库', icon: 'fa-solid fa-box-archive', action: () => launchApp('com.ditto.resources') },
       { divider: true, label: '' },
-      { label: '系统设置', icon: '⚙️', action: () => launchApp('com.ditto.settings') },
-      { label: '关于 Ditto', icon: 'ℹ️', action: () => launchApp('com.ditto.about') },
+      { label: '系统设置', icon: 'fa-solid fa-gear', action: () => launchApp('com.ditto.settings') },
+      { label: '关于 Ditto', icon: 'fa-solid fa-circle-info', action: () => launchApp('com.ditto.about') },
     ],
   };
 }
@@ -625,10 +625,8 @@ function onDialogCancel() {
   <DTaskbar>
     <template #default>
       <button class="start-btn" @click="toggleStartMenu" title="开始菜单">
-        <span class="start-btn__home">🏠</span>
-        <span class="start-btn__hamburger">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><line x1="3" y1="5" x2="17" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="3" y1="15" x2="17" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </span>
+        <DIcon name="fa-solid fa-house" class="start-btn__home" />
+        <DIcon name="fa-solid fa-bars" class="start-btn__hamburger" size="20px" />
       </button>
     </template>
     <template #tray>
@@ -640,10 +638,7 @@ function onDialogCancel() {
         :title="notificationStore.unreadCount > 0 ? `${notificationStore.unreadCount} 条未读通知` : '通知中心'"
         :aria-label="`通知中心，${notificationStore.unreadCount} 条未读`"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M3.5 6.5a4.5 4.5 0 0 1 9 0v3l1 1.5H2.5l1-1.5v-3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-          <path d="M6.5 12.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
+        <DIcon name="fa-solid fa-bell" size="16px" />
         <span v-if="notificationStore.unreadCount > 0" class="tray-badge">{{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}</span>
       </button>
 
@@ -655,17 +650,12 @@ function onDialogCancel() {
         title="控制中心"
         aria-label="控制中心"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          <circle cx="5" cy="4" r="1.5" fill="currentColor"/>
-          <circle cx="10" cy="8" r="1.5" fill="currentColor"/>
-          <circle cx="6" cy="12" r="1.5" fill="currentColor"/>
-        </svg>
+        <DIcon name="fa-solid fa-sliders" size="16px" />
       </button>
 
       <!-- 主题切换按钮 -->
       <button class="tray-btn tray-btn--icon" @click="toggleTheme" :title="isDark ? '切换浅色' : '切换深色'" :aria-label="isDark ? '切换到浅色主题' : '切换到深色主题'">
-        {{ isDark ? '☀️' : '🌙' }}
+        <DIcon :name="isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon'" />
       </button>
 
       <!-- 时钟：点击展开日历下拉 -->

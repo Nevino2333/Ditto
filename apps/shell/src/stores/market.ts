@@ -158,7 +158,7 @@ export const useMarketStore = defineStore('market', () => {
         name: data.name ?? entry?.manifest.name ?? appId,
         version: data.version ?? entry?.manifest.version ?? '0.1.0',
         description: entry?.manifest.description ?? '',
-        icon: entry?.manifest.icon ?? '📦',
+        icon: entry?.manifest.icon ?? 'fa-solid fa-box',
         entry: 'frontend/index.html',
         category: entry?.manifest.category ?? 'installed',
         sandbox: 'trusted',

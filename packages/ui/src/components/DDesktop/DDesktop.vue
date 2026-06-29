@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useWindowStore, useAppStore } from '@ditto/services';
 import type { AppManifest } from '@ditto/shared';
+import { DIcon } from '../DIcon';
 
 const props = withDefaults(defineProps<{
   iconSize?: number;
@@ -75,7 +76,7 @@ function onContextMenu(e: MouseEvent) {
         @click.stop="onAppClick(app)"
       >
         <slot name="icon" :app="app">
-          <span class="d-desktop__icon-img">{{ app.icon || '📦' }}</span>
+          <DIcon :name="app.icon || 'fa-solid fa-box'" class="d-desktop__icon-img" />
           <span v-if="showLabels" class="d-desktop__icon-label">{{ app.name }}</span>
         </slot>
       </div>

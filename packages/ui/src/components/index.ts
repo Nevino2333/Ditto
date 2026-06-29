@@ -12,3 +12,4 @@ export { DCalendarPanel } from './DCalendarPanel';
 export { DNotificationCenter } from './DNotificationCenter';
 export { DControlCenter } from './DControlCenter';
 export { DLockScreen } from './DLockScreen';
+export { DIcon } from './DIcon';

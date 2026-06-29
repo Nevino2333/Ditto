@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue';
+import { DIcon } from '../DIcon';
 
 const props = withDefaults(defineProps<{
   visible: boolean;
@@ -122,10 +123,7 @@ onUnmounted(() => {
           <div class="d-dialog__titlebar">
             <span class="d-dialog__title">{{ title }}</span>
             <button class="d-dialog__close" @click="onCancel">
-              <svg width="10" height="10" viewBox="0 0 10 10">
-                <line x1="1" y1="1" x2="9" y2="9" stroke="currentColor" stroke-width="1.2"/>
-                <line x1="9" y1="1" x2="1" y2="9" stroke="currentColor" stroke-width="1.2"/>
-              </svg>
+              <DIcon name="fa-solid fa-xmark" />
             </button>
           </div>
 
@@ -151,7 +149,7 @@ onUnmounted(() => {
                 @click="onFileSelect(file.name)"
                 @dblclick="onFileDblClick(file.name)"
               >
-                <span class="d-dialog__file-icon">{{ file.type === 'folder' ? '📁' : '📄' }}</span>
+                <DIcon :name="file.type === 'folder' ? 'fa-solid fa-folder' : 'fa-solid fa-file'" class="d-dialog__file-icon" />
                 <span class="d-dialog__file-name">{{ file.name }}</span>
               </div>
             </div>

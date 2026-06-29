@@ -2,6 +2,7 @@
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue';
 import { useSearchStore, useAppStore } from '@ditto/services';
 import type { SearchItem } from '@ditto/services';
+import { DIcon } from '../DIcon';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
@@ -156,7 +157,7 @@ onBeforeUnmount(() => {
         <div class="d-global-search__panel" @click.stop>
           <!-- 搜索框 -->
           <div class="d-global-search__input-wrap">
-            <span class="d-global-search__icon" aria-hidden="true">🔍</span>
+            <DIcon name="fa-solid fa-magnifying-glass" class="d-global-search__icon" />
             <input
               ref="inputRef"
               v-model="query"
@@ -173,7 +174,7 @@ onBeforeUnmount(() => {
               type="button"
               aria-label="清空搜索"
               @click="query = ''"
-            >✕</button>
+            ><DIcon name="fa-solid fa-xmark" /></button>
           </div>
 
           <div class="d-global-search__body">
@@ -195,7 +196,7 @@ onBeforeUnmount(() => {
                   @click="onItemClick(entry.item)"
                   @mouseenter="selectedIndex = entry.flatIndex"
                 >
-                  <span class="d-global-search__result-icon">{{ entry.item.icon || '🔹' }}</span>
+                  <DIcon :name="entry.item.icon || 'fa-solid fa-square'" class="d-global-search__result-icon" />
                   <div class="d-global-search__result-info">
                     <span class="d-global-search__result-title">{{ entry.item.title }}</span>
                     <span v-if="entry.item.description" class="d-global-search__result-desc">{{ entry.item.description }}</span>

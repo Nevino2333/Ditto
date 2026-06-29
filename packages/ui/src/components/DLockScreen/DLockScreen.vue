@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { usePowerStore } from '@ditto/services';
+import { DIcon } from '../DIcon';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
@@ -87,7 +88,7 @@ function onKeydown(e: KeyboardEvent) {
         </div>
 
         <div class="d-lock__panel">
-          <div class="d-lock__avatar" aria-hidden="true">👤</div>
+          <DIcon name="fa-solid fa-user" class="d-lock__avatar" />
           <div class="d-lock__hint">已锁定</div>
           <input
             ref="inputRef"

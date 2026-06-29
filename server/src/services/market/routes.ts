@@ -35,6 +35,25 @@ interface MarketRouteDeps {
   localDataDir?: string;
 }
 
+/** Maximum number of reviews persisted per app; oldest entries are dropped beyond this cap. */
+const MAX_REVIEWS_PER_APP = 200;
+
+/** A review entry persisted to disk; extends MarketReview with an optional display name. */
+interface PersistedReview extends MarketReview {
+  userName?: string;
+}
+
+/** On-disk structure for persisted reviews (server/data/reviews/<appId>.json). */
+interface ReviewFile {
+  appId: string;
+  reviews: PersistedReview[];
+}
+
+/** App store entry augmented with an install-state hint surfaced to the Market list. */
+interface MarketAppEntry extends AppStoreEntry {
+  installed: boolean;
+}
+
 const DEFAULT_CATEGORIES: MarketCategory[] = [
   { id: 'productivity', name: '效率工具', icon: '📊', description: '提升工作效率的工具应用' },
   { id: 'social', name: '社交', icon: '💬', description: '社交和通讯应用' },
@@ -657,6 +676,8 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
   fs.mkdirSync(ditCacheDir, { recursive: true });
 
   const packagesDir = path.resolve(process.cwd(), 'data', 'market-packages');
+  // Persisted reviews live alongside installed apps under server/data/reviews/.
+  const reviewsDir = path.resolve(process.cwd(), 'data', 'reviews');
 
   router.get('/packages/:filename', async (c) => {
     const filename = c.req.param('filename');
@@ -788,6 +809,37 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     } catch { return []; }
   }
 
+  /**
+   * Reads the pre-installed apps directory (appsDir, e.g. server/data/apps/).
+   * Directory names use underscores (com_ditto_calc) while manifest.id uses
+   * dots (com.ditto.calc), so we read each manifest.json to resolve the real id.
+   */
+  function listPreInstalledAppIds(): string[] {
+    try {
+      if (!fs.existsSync(appsDir)) return [];
+      const dirs = fs.readdirSync(appsDir, { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .map(d => d.name);
+      const ids: string[] = [];
+      for (const dirName of dirs) {
+        try {
+          const manifestPath = path.join(appsDir, dirName, 'manifest.json');
+          if (fs.existsSync(manifestPath)) {
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as AppManifest;
+            if (manifest.id) ids.push(manifest.id);
+          }
+        } catch {}
+      }
+      return ids;
+    } catch { return []; }
+  }
+
+  /** Whether an app is physically present in the pre-installed apps directory. */
+  function isPreInstalled(appId: string): boolean {
+    const dirName = appId.replace(/\./g, '_');
+    return fs.existsSync(path.join(appsDir, dirName, 'manifest.json'));
+  }
+
   async function listAppDirs(): Promise<string[]> {
     const cacheKey = 'app-dirs';
     const cached = getCache<string[]>(cacheKey);
@@ -795,7 +847,8 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
 
     const localDirs = listLocalAppDirs();
     const testDirs = listTestAppDirs();
-    const combinedLocal = [...new Set([...localDirs, ...testDirs])];
+    const preInstalledIds = listPreInstalledAppIds();
+    const combinedLocal = [...new Set([...localDirs, ...testDirs, ...preInstalledIds])];
     if (combinedLocal.length > 0) {
       const allDirs = [...new Set([...combinedLocal, ...DEMO_APPS.map(a => a.id)])];
       setCache(cacheKey, allDirs, API_CACHE_TTL);
@@ -847,6 +900,18 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
       } catch {}
     }
 
+    // Pre-installed apps live in appsDir using underscored directory names
+    // (e.g. com.ditto.calc -> com_ditto_calc), while manifest.id keeps dots.
+    const preInstalledDirName = appId.replace(/\./g, '_');
+    const preInstalledManifestPath = path.join(appsDir, preInstalledDirName, 'manifest.json');
+    try {
+      if (fs.existsSync(preInstalledManifestPath)) {
+        const preInstalledManifest = JSON.parse(fs.readFileSync(preInstalledManifestPath, 'utf8')) as AppManifest & { market?: MarketMeta };
+        setCache(cacheKey, preInstalledManifest, API_CACHE_TTL);
+        return preInstalledManifest;
+      }
+    } catch {}
+
     const demoApp = DEMO_APPS.find(a => a.id === appId);
     if (demoApp) {
       const manifest = { ...demoApp.manifest, market: demoApp.market };
@@ -866,7 +931,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     throw new Error(`App ${appId} not found`);
   }
 
-  async function buildAppStoreEntry(appId: string): Promise<AppStoreEntry> {
+  async function buildAppStoreEntry(appId: string): Promise<MarketAppEntry> {
     const manifest = await getAppManifest(appId);
     const market = manifest.market ?? {
       summary: manifest.description ?? '',
@@ -879,7 +944,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
       publisher: '',
     };
 
-    let reviews: MarketReview[] = [];
+    let reviews: PersistedReview[] = [];
     try {
       reviews = await getAppReviews(appId);
     } catch {}
@@ -890,6 +955,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
       : 0;
 
     const demoApp = DEMO_APPS.find(a => a.id === appId);
+    const installed = isPreInstalled(appId) || cellManager.getInstalledApps().has(appId);
 
     return {
       id: appId,
@@ -901,29 +967,68 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
       verified: true,
       publishedAt: demoApp?.publishedAt ?? 0,
       updatedAt: demoApp?.updatedAt ?? 0,
+      installed,
     };
   }
 
-  async function getAppReviews(appId: string): Promise<MarketReview[]> {
+  /** Resolves the on-disk path for an app's persisted reviews (appId dots -> underscores). */
+  function reviewFilePath(appId: string): string {
+    return path.join(reviewsDir, `${appId.replace(/\./g, '_')}.json`);
+  }
+
+  /** Reads persisted reviews for an app; returns null when the file does not exist or is unreadable. */
+  async function readReviewFile(appId: string): Promise<PersistedReview[] | null> {
+    try {
+      const filePath = reviewFilePath(appId);
+      if (!fs.existsSync(filePath)) return null;
+      const raw = await fs.promises.readFile(filePath, 'utf8');
+      const parsed = JSON.parse(raw) as Partial<ReviewFile>;
+      if (parsed && Array.isArray(parsed.reviews)) {
+        return parsed.reviews as PersistedReview[];
+      }
+      return null;
+    } catch (e) {
+      console.error(`[Market] Failed to read reviews for ${appId}:`, e instanceof Error ? e.message : e);
+      return null;
+    }
+  }
+
+  /** Persists reviews for an app, creating the reviews directory if needed. Returns false on failure. */
+  async function writeReviewFile(appId: string, reviews: PersistedReview[]): Promise<boolean> {
+    try {
+      await fs.promises.mkdir(reviewsDir, { recursive: true });
+      const file: ReviewFile = { appId, reviews };
+      await fs.promises.writeFile(reviewFilePath(appId), JSON.stringify(file, null, 2), 'utf8');
+      return true;
+    } catch (e) {
+      console.error(`[Market] Failed to write reviews for ${appId}:`, e instanceof Error ? e.message : e);
+      return false;
+    }
+  }
+
+  async function getAppReviews(appId: string): Promise<PersistedReview[]> {
     const cacheKey = `reviews:${appId}`;
-    const cached = getCache<MarketReview[]>(cacheKey);
+    const cached = getCache<PersistedReview[]>(cacheKey);
     if (cached) return cached;
 
-    const localReviews = readLocalJSON<MarketReview[]>(`data/reviews/${appId}.json`);
-    if (localReviews) {
+    // 1. Local persisted reviews (server/data/reviews/<appId>.json)
+    const localReviews = await readReviewFile(appId);
+    if (localReviews !== null) {
       setCache(cacheKey, localReviews, REVIEW_CACHE_TTL);
       return localReviews;
     }
 
+    // 2. Fallback to demo reviews
     if (DEMO_REVIEWS[appId]) {
-      setCache(cacheKey, DEMO_REVIEWS[appId], REVIEW_CACHE_TTL);
-      return DEMO_REVIEWS[appId];
+      setCache(cacheKey, DEMO_REVIEWS[appId] as PersistedReview[], REVIEW_CACHE_TTL);
+      return DEMO_REVIEWS[appId] as PersistedReview[];
     }
 
+    // 3. Remote (GitHub) as a last resort
     const ghAvailable = await checkGitHubAvailable();
     if (ghAvailable) {
       try {
-        const reviews = await fetchGitHubJSON<MarketReview[]>(
+        const reviews = await fetchGitHubJSON<PersistedReview[]>(
           `data/reviews/${appId}.json`
         );
         setCache(cacheKey, reviews, REVIEW_CACHE_TTL);
@@ -989,7 +1094,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
 
     try {
       const appDirs = await listAppDirs();
-      const entries: AppStoreEntry[] = [];
+      const entries: MarketAppEntry[] = [];
 
       for (const appId of appDirs) {
         try {
@@ -1074,6 +1179,50 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     }
   });
 
+  router.get('/apps/:appId/icon', async (c) => {
+    const appId = c.req.param('appId');
+    const dirName = appId.replace(/\./g, '_');
+
+    // Pre-installed apps live in appsDir (underscored names); test apps may live in testAppsDir.
+    const candidateDirs: string[] = [path.join(appsDir, dirName)];
+    if (testAppsDir) candidateDirs.push(path.join(testAppsDir, appId));
+
+    const iconMimeTypes: Record<string, string> = {
+      '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif', '.webp': 'image/webp', '.ico': 'image/x-icon', '.bmp': 'image/bmp',
+    };
+
+    for (const baseDir of candidateDirs) {
+      const manifestPath = path.join(baseDir, 'manifest.json');
+      if (!fs.existsSync(manifestPath)) continue;
+
+      let icon: string | undefined;
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as AppManifest;
+        icon = manifest.icon;
+      } catch {
+        continue;
+      }
+      if (!icon) continue;
+
+      // Only treat the icon as a file when it references an image asset path.
+      if (!/\.(svg|png|jpe?g|webp|gif|ico|bmp)$/i.test(icon)) continue;
+
+      const resolvedBase = path.resolve(baseDir);
+      const iconPath = path.resolve(resolvedBase, icon);
+      // Guard against path traversal escaping the app directory.
+      if (!iconPath.startsWith(resolvedBase + path.sep) && iconPath !== resolvedBase) continue;
+      if (!fs.existsSync(iconPath) || !fs.statSync(iconPath).isFile()) continue;
+
+      const ext = path.extname(iconPath).toLowerCase();
+      c.header('Content-Type', iconMimeTypes[ext] ?? 'application/octet-stream');
+      c.header('Cache-Control', 'public, max-age=3600');
+      return c.body(fs.readFileSync(iconPath));
+    }
+
+    return c.json({ error: 'Icon not found' }, 404);
+  });
+
   router.get('/apps/:appId/changelog', async (c) => {
     const appId = c.req.param('appId');
 
@@ -1103,7 +1252,7 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     const userId = c.req.header('X-User-Id');
     if (!userId) return c.json({ error: 'Authentication required' }, 401);
 
-    const body = await c.req.json<{ rating: number; comment: string }>();
+    const body = await c.req.json<{ rating: number; comment: string; userName?: string }>();
     if (!body.rating || body.rating < 1 || body.rating > 5) {
       return c.json({ error: 'Rating must be between 1 and 5' }, 400);
     }
@@ -1115,21 +1264,38 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     }
 
     const manifest = await getAppManifest(appId);
-    const review: MarketReview = {
+    const review: PersistedReview = {
       userId,
+      userName: body.userName ?? userId,
       rating: body.rating,
       comment: body.comment ?? '',
       version: manifest.version,
       createdAt: new Date().toISOString(),
     };
 
+    // Persist: read existing file -> append -> cap at MAX_REVIEWS_PER_APP (drop oldest) -> write back.
+    const fileReviews = await readReviewFile(appId);
+    const baseReviews: PersistedReview[] = fileReviews ?? [];
+    const appended = [...baseReviews, review];
+    const capped = appended.length > MAX_REVIEWS_PER_APP
+      ? appended.slice(appended.length - MAX_REVIEWS_PER_APP)
+      : appended;
+    await writeReviewFile(appId, capped);
+
+    // Invalidate cache so subsequent reads reflect the newly persisted review.
+    cache.delete(`reviews:${appId}`);
+
+    // Re-fetch the canonical review list (now served from the persisted file).
+    const reviews = await getAppReviews(appId);
+
     const prTitle = `Review: ${appId} by ${userId}`;
     const prBody = `Adding review for ${appId}\n\nRating: ${'⭐'.repeat(body.rating)}\nComment: ${body.comment ?? '(no comment)'}`;
     const prUrl = `https://github.com/${owner}/${repo}/compare/${DEFAULT_BRANCH}...${userId}:ditto-market-review-${appId}-${Date.now()}?expand=1&title=${encodeURIComponent(prTitle)}&body=${encodeURIComponent(prBody)}`;
 
     return c.json({
-      message: 'Please submit your review via GitHub PR',
+      message: 'Review submitted',
       review,
+      reviews,
       prUrl,
       instructions: `Fork the repo, add your review to data/reviews/${appId}.json, and submit a PR.`,
     });
@@ -1273,18 +1439,36 @@ export function createMarketRoutes(deps: MarketRouteDeps): Hono {
     return c.json({ updates, total: updates.length });
   });
 
-  router.get('/installed', (c) => {
+  router.get('/installed', async (c) => {
     const installedApps = cellManager.getInstalledApps();
     const result: InstalledAppInfo[] = [];
 
     for (const [appId, data] of installedApps) {
+      let hasUpdate = false;
+      let latestVersion: string | undefined;
+      let latestDownloadUrl: string | undefined;
+      try {
+        const remoteManifest = await getAppManifest(appId);
+        const localVersion = data.manifest.version;
+        const remoteVersion = remoteManifest.version;
+        if (remoteVersion !== localVersion && compareVersions(remoteVersion, localVersion) > 0) {
+          hasUpdate = true;
+          latestVersion = remoteVersion;
+          latestDownloadUrl = remoteManifest.market?.downloadUrl ?? '';
+        }
+      } catch {}
+
       result.push({
         appId,
         appName: data.manifest.name,
         icon: data.manifest.icon,
         installedVersion: data.manifest.version,
+        // NOTE: AppCellManager.getInstalledApps() does not track installation
+        // timestamps, so 0 is returned as a placeholder until that API is extended.
         installedAt: 0,
-        hasUpdate: false,
+        hasUpdate,
+        latestVersion,
+        latestDownloadUrl,
       });
     }
 

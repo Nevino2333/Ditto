@@ -3,6 +3,7 @@ import { computed, ref, onMounted, watch } from 'vue';
 import { useWindowStore, type SnapZone } from '@ditto/services';
 import { useDrag } from '../../composables/useDrag';
 import { useResize } from '../../composables/useResize';
+import { DIcon } from '../DIcon';
 
 const props = withDefaults(defineProps<{
   windowId: string;
@@ -219,28 +220,19 @@ onMounted(() => {
       @dblclick="onTitlebarDblClick"
     >
       <slot name="titlebar-prefix" />
-      <span class="d-window__icon">{{ win.icon }}</span>
+      <DIcon v-if="win.icon" :name="win.icon" class="d-window__icon" />
       <span class="d-window__title">{{ win.title }}</span>
       <slot name="titlebar-suffix" />
       <div v-if="showControls" class="d-window__controls">
         <slot name="controls" :minimize="onMinimize" :maximize="onMaximize" :close="onClose">
           <button class="d-window__btn d-window__btn--minimize" title="最小化" @click.stop="onMinimize">
-            <svg width="10" height="10" viewBox="0 0 10 10"><line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.2"/></svg>
+            <DIcon name="fa-solid fa-window-minimize" />
           </button>
           <button v-if="win.maximizable" class="d-window__btn d-window__btn--maximize" :title="win.state === 'maximized' ? '还原' : '最大化'" @click.stop="onMaximize">
-            <svg v-if="win.state === 'maximized'" width="10" height="10" viewBox="0 0 10 10">
-              <rect x="2" y="0" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.2"/>
-              <rect x="0" y="2" width="7" height="7" fill="var(--ditto-color-surface-overlay, #fff)" stroke="currentColor" stroke-width="1.2"/>
-            </svg>
-            <svg v-else width="10" height="10" viewBox="0 0 10 10">
-              <rect x="0.5" y="0.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.2"/>
-            </svg>
+            <DIcon :name="win.state === 'maximized' ? 'fa-solid fa-window-restore' : 'fa-solid fa-window-maximize'" />
           </button>
           <button class="d-window__btn d-window__btn--close" title="关闭" @click.stop="onClose">
-            <svg width="10" height="10" viewBox="0 0 10 10">
-              <line x1="1" y1="1" x2="9" y2="9" stroke="currentColor" stroke-width="1.2"/>
-              <line x1="9" y1="1" x2="1" y2="9" stroke="currentColor" stroke-width="1.2"/>
-            </svg>
+            <DIcon name="fa-solid fa-xmark" />
           </button>
         </slot>
       </div>

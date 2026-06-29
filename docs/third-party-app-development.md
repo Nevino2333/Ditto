@@ -24,7 +24,25 @@
 
 ## 应用类型
 
-Ditto 支持四种应用类型，通过 `CellRuntimeConfig.type` 区分：
+Ditto 中存在两个相互独立的 `type` 概念，开发者需要区分：
+
+### 1. `AppManifest.type` — 应用分类（声明在 manifest.json）
+
+应用在 manifest 中声明的"分类标签"，决定打包扩展名、UI 呈现方式与权限默认值：
+
+| 类型 | 说明 | 打包扩展名 | 典型场景 |
+|------|------|-----------|---------|
+| `app` | 普通应用（默认） | `.dit` | 文件管理器、终端、编辑器 |
+| `widget` | 桌面小组件 | `.ditx` | 时钟、天气、系统监视 |
+| `plugin` | 后台插件（无独立窗口） | `.ditc` | 剪贴板增强、输入法 |
+| `theme` | 主题包 | `.ditz` | Nord / Forest / Ocean |
+| `dit` | 前后端对称 Cell 应用 | `.dit` | 需要后端逻辑的应用（如协作计数器） |
+
+> `dit` 是 `app` 的超集：拥有前端 + 后端 Cell，运行时通过 `CellRuntimeConfig.type='dit'` 激活后端桥接。打包扩展名与 `app` 相同（`.dit`）。
+
+### 2. `CellRuntimeConfig.type` — 运行时沙盒类型（启动 Cell 时指定）
+
+Shell 在启动 Cell 时根据运行时配置选择沙盒模式：
 
 | 类型 | 说明 | 沙盒模式 | 后端 Cell | 典型场景 |
 |------|------|---------|---------|---------|
@@ -33,7 +51,9 @@ Ditto 支持四种应用类型，通过 `CellRuntimeConfig.type` 区分：
 | `pwa` | PWA manifest 驱动 | `iframe-strict` | ❌ | PWA 应用 |
 | `dit` | 前后端对称 Cell | `iframe-strict` | ✅ | 需要后端逻辑的应用（笔记、协作） |
 
-**推荐**：新应用优先选择 `dit` 类型，可同时获得前后端能力与 Ditto 完整生态支持。
+**两者关系**：manifest.type='dit' 的应用通常以 CellRuntimeConfig.type='dit' 启动（由 Shell 根据 `backend.type==='cell'` 推断），但二者维度不同 — manifest.type 描述"这是什么应用"，CellRuntimeConfig.type 描述"这个应用在什么沙盒里运行"。
+
+**推荐**：需要后端逻辑的新应用优先选择 `dit` 类型（manifest 与运行时均为 dit），可同时获得前后端能力与 Ditto 完整生态支持。
 
 ## manifest.json 规范
 

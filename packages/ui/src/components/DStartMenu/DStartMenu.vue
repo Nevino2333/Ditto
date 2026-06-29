@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useAppStore } from '@ditto/services';
+import { DIcon } from '../DIcon';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
@@ -56,7 +57,7 @@ function onOverlayClick() {
             :aria-label="`启动 ${app.name}`"
             @click="onAppClick(app.id)"
           >
-            <span class="d-start-menu__app-icon">{{ app.icon || '📦' }}</span>
+            <DIcon :name="app.icon || 'fa-solid fa-box'" class="d-start-menu__app-icon" />
             <div class="d-start-menu__app-info">
               <span class="d-start-menu__app-name">{{ app.name }}</span>
               <span class="d-start-menu__app-desc">{{ app.description || app.category || '' }}</span>

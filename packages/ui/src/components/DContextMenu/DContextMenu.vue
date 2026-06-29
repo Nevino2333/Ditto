@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { DIcon } from '../DIcon';
 
 interface ContextMenuItem {
   label: string;
@@ -62,7 +63,7 @@ onUnmounted(() => {
             @click="onItemClick(item)"
             :disabled="item.disabled"
           >
-            <span v-if="item.icon" class="d-context-menu__item-icon">{{ item.icon }}</span>
+            <DIcon v-if="item.icon" :name="item.icon" class="d-context-menu__item-icon" />
             <span class="d-context-menu__item-label">{{ item.label }}</span>
           </button>
         </template>

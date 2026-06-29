@@ -2,6 +2,7 @@
 import { watch, onUnmounted } from 'vue';
 import { useNotificationStore } from '@ditto/services';
 import type { NotificationEntry } from '@ditto/services';
+import { DIcon } from '../DIcon';
 
 const store = useNotificationStore();
 
@@ -78,12 +79,12 @@ function onDismiss(id: string) {
           :class="`d-notification--${notif.type || 'info'}`"
           @click="onDismiss(notif.id)"
         >
-          <span v-if="notif.icon" class="d-notification__icon">{{ notif.icon }}</span>
+          <DIcon v-if="notif.icon" :name="notif.icon" class="d-notification__icon" />
           <div class="d-notification__content">
             <span class="d-notification__title">{{ notif.title }}</span>
             <span class="d-notification__body">{{ notif.body }}</span>
           </div>
-          <button class="d-notification__close" @click.stop="onDismiss(notif.id)">×</button>
+          <button class="d-notification__close" @click.stop="onDismiss(notif.id)"><DIcon name="fa-solid fa-xmark" /></button>
         </div>
       </TransitionGroup>
     </div>
